@@ -34,7 +34,11 @@ $ uv run python -m src.discover ./path_to_log
 ```
 
 We describe some OCELs that are ready to use below in the project structure.
-For example, use `data/evaluation/publicocels/procure-to-pay.xml`.
+For example, use `data/evaluation/publicocels/procure-to-pay.xml`:
+
+```bash
+$ uv run python -m src.discover data/evaluation/publicocels/procure-to-pay.xml
+```
 
 
 ## Ocelescope Installation
