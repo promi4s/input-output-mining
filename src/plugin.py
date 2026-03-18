@@ -173,6 +173,7 @@ def discovery_unannotated(ocel, input: Input, weighted: bool) -> ObjectFlowNet:
             "DRAW_TRANSITION_INFORMATION": input.show_helper_text,
             "USE_ARC_WEIGHTS": weighted,
             "DRAW_ARC_WEIGHTS": weighted,
+            "DIRECTION": "TB",
         },
         object_instances,
     )
@@ -235,6 +236,7 @@ def discovery_annotated(ocel, input: AnnotatedInput, weighted: bool) -> ObjectFl
             "DRAW_TRANSITION_INFORMATION": input.show_helper_text,
             "USE_ARC_WEIGHTS": weighted,
             "DRAW_ARC_WEIGHTS": weighted,
+            "DIRECTION": "TB",
         },
         object_instances,
     )

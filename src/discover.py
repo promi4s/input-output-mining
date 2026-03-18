@@ -127,12 +127,14 @@ if __name__ == "__main__":
         # =====
         # Set whether information should be shown on the places and transitions.
         # In addition, use weighted arcs if `False`, and variable arcs otherwise.
+        # Set direction to `TB` for a top-to-bottom graph, and to `LR` for left-to-right.
         # =====
         {
             "DRAW_PLACE_INFORMATION": False,
             "DRAW_TRANSITION_INFORMATION": False,
             "USE_ARC_WEIGHTS": False,
             "DRAW_ARC_WEIGHTS": False,
+            "DIRECTION": "TB",
         },
         object_instances,
     )

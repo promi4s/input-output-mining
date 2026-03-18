@@ -1291,7 +1291,7 @@ def discover_dot_string(
     detect_self_loops(transitions, places)
     places = combine_subsets(places)
     fill_missing_transitions(transitions, places)
-    viz = apply(transitions, places, "TB")
+    viz = apply(transitions, places, config["DIRECTION"])
 
     return viz
 
@@ -1313,7 +1313,7 @@ def discover(aggregation, ocel, by_object_id, labels, config, object_instances):
     detect_self_loops(transitions, places)
     places = combine_subsets(places)
     fill_missing_transitions(transitions, places)
-    viz = apply(transitions, places, "LR")
+    viz = apply(transitions, places, config["DIRECTION"])
 
     gview.view(viz)
 
