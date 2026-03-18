@@ -1,0 +1,244 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<log>
+  <object-types>
+    <object-type name="Fiber">
+      <attributes>
+        <attribute name="mass" type="string"/>
+      </attributes>
+    </object-type>
+    <object-type name="Mold">
+      <attributes>
+        <attribute name="mass" type="string"/>
+      </attributes>
+    </object-type>
+    <object-type name="Product">
+      <attributes>
+        <attribute name="mass" type="string"/>
+      </attributes>
+    </object-type>
+    <object-type name="Resin">
+      <attributes>
+        <attribute name="mass" type="string"/>
+      </attributes>
+    </object-type>
+    <object-type name="Waste">
+      <attributes>
+        <attribute name="mass" type="string"/>
+      </attributes>
+    </object-type>
+  </object-types>
+  <event-types>
+    <event-type name="Degas">
+      <attributes/>
+    </event-type>
+    <event-type name="Inject">
+      <attributes/>
+    </event-type>
+    <event-type name="Pack">
+      <attributes/>
+    </event-type>
+    <event-type name="Trim">
+      <attributes/>
+    </event-type>
+  </event-types>
+  <objects>
+    <object id="a1_1" type="Fiber">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">10</attribute>
+      </attributes>
+    </object>
+    <object id="a1_2" type="Fiber">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">10</attribute>
+      </attributes>
+    </object>
+    <object id="a1_3" type="Fiber">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">10</attribute>
+      </attributes>
+    </object>
+    <object id="a1_4" type="Fiber">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">10</attribute>
+      </attributes>
+    </object>
+    <object id="a1_5" type="Fiber">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">10</attribute>
+      </attributes>
+    </object>
+    <object id="b1_1" type="Resin">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">12</attribute>
+      </attributes>
+    </object>
+    <object id="b1_2" type="Resin">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">12</attribute>
+      </attributes>
+    </object>
+    <object id="b1_3" type="Resin">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">12</attribute>
+      </attributes>
+    </object>
+    <object id="c1" type="Mold">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">22</attribute>
+      </attributes>
+    </object>
+    <object id="d1_1" type="Waste">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">2</attribute>
+      </attributes>
+    </object>
+    <object id="e1" type="Product">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">31</attribute>
+      </attributes>
+    </object>
+    <object id="a2_1" type="Fiber">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">10</attribute>
+      </attributes>
+    </object>
+    <object id="a2_2" type="Fiber">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">10</attribute>
+      </attributes>
+    </object>
+    <object id="a2_3" type="Fiber">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">10</attribute>
+      </attributes>
+    </object>
+    <object id="a2_4" type="Fiber">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">10</attribute>
+      </attributes>
+    </object>
+    <object id="a2_5" type="Fiber">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">10</attribute>
+      </attributes>
+    </object>
+    <object id="b2_1" type="Resin">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">15</attribute>
+      </attributes>
+    </object>
+    <object id="b2_2" type="Resin">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">15</attribute>
+      </attributes>
+    </object>
+    <object id="b2_3" type="Resin">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">15</attribute>
+      </attributes>
+    </object>
+    <object id="c2" type="Mold">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">25</attribute>
+      </attributes>
+    </object>
+    <object id="d2_1" type="Waste">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">3</attribute>
+      </attributes>
+    </object>
+    <object id="d2_2" type="Waste">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">5</attribute>
+      </attributes>
+    </object>
+    <object id="d2_3" type="Waste">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">2</attribute>
+      </attributes>
+    </object>
+    <object id="e2" type="Product">
+      <attributes>
+        <attribute name="mass" time="1970-01-01T00:00:00Z">31</attribute>
+      </attributes>
+    </object>
+  </objects>
+  <events>
+    <event id="s1_1" type="Inject" time="1970-01-01T00:00:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="a1_1" qualifier="a"/>
+        <relationship object-id="a1_2" qualifier="a"/>
+        <relationship object-id="a1_3" qualifier="a"/>
+        <relationship object-id="a1_4" qualifier="a"/>
+        <relationship object-id="a1_5" qualifier="a"/>
+        <relationship object-id="b1_1" qualifier="a"/>
+        <relationship object-id="b1_2" qualifier="a"/>
+        <relationship object-id="b1_3" qualifier="a"/>
+        <relationship object-id="c1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="s1_2" type="Degas" time="1970-01-01T00:01:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="c1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="s1_3_1" type="Trim" time="1970-01-01T00:02:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="c1" qualifier="a"/>
+        <relationship object-id="d1_1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="s1_4" type="Pack" time="1970-01-01T00:03:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="c1" qualifier="a"/>
+        <relationship object-id="e1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="s2_1" type="Inject" time="1970-01-01T00:04:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="a2_1" qualifier="a"/>
+        <relationship object-id="a2_2" qualifier="a"/>
+        <relationship object-id="a2_3" qualifier="a"/>
+        <relationship object-id="a2_4" qualifier="a"/>
+        <relationship object-id="a2_5" qualifier="a"/>
+        <relationship object-id="b2_1" qualifier="a"/>
+        <relationship object-id="b2_2" qualifier="a"/>
+        <relationship object-id="b2_3" qualifier="a"/>
+        <relationship object-id="c2" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="s2_3_1" type="Trim" time="1970-01-01T00:05:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="c2" qualifier="a"/>
+        <relationship object-id="d2_1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="s2_3_2" type="Trim" time="1970-01-01T00:06:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="c2" qualifier="a"/>
+        <relationship object-id="d2_2" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="s2_3_3" type="Trim" time="1970-01-01T00:07:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="c2" qualifier="a"/>
+        <relationship object-id="d2_3" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="s2_4" type="Pack" time="1970-01-01T00:08:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="c2" qualifier="a"/>
+        <relationship object-id="e2" qualifier="a"/>
+      </objects>
+    </event>
+  </events>
+</log>

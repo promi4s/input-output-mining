@@ -1,0 +1,130 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<log>
+  <object-types>
+    <object-type name="Container">
+      <attributes/>
+    </object-type>
+    <object-type name="Handling Unit">
+      <attributes/>
+    </object-type>
+  </object-types>
+  <event-types>
+    <event-type name="Collect Goods">
+      <attributes/>
+    </event-type>
+    <event-type name="Drive to Terminal">
+      <attributes/>
+    </event-type>
+    <event-type name="Load Truck">
+      <attributes/>
+    </event-type>
+    <event-type name="Order Empty Containers">
+      <attributes/>
+    </event-type>
+    <event-type name="Pick Up Empty Container">
+      <attributes/>
+    </event-type>
+    <event-type name="Ship">
+      <attributes/>
+    </event-type>
+  </event-types>
+  <objects>
+    <object id="hu1" type="Handling Unit">
+      <attributes/>
+    </object>
+    <object id="hu2" type="Handling Unit">
+      <attributes/>
+    </object>
+    <object id="hu3" type="Handling Unit">
+      <attributes/>
+    </object>
+    <object id="hu4" type="Handling Unit">
+      <attributes/>
+    </object>
+    <object id="container1" type="Container">
+      <attributes/>
+    </object>
+    <object id="container2" type="Container">
+      <attributes/>
+    </object>
+  </objects>
+  <events>
+    <event id="collect1" type="Collect Goods" time="1970-01-01T00:00:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="hu1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="order1" type="Order Empty Containers" time="1970-01-01T00:01:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="container1" qualifier="a"/>
+        <relationship object-id="container2" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="pick1" type="Pick Up Empty Container" time="1970-01-01T00:02:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="container1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="load1" type="Load Truck" time="1970-01-01T00:03:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="hu1" qualifier="a"/>
+        <relationship object-id="container1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="collect2" type="Collect Goods" time="1970-01-01T00:04:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="hu2" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="load2" type="Load Truck" time="1970-01-01T00:05:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="hu2" qualifier="a"/>
+        <relationship object-id="container1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="drive1" type="Drive to Terminal" time="1970-01-01T00:06:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="container1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="collect3" type="Collect Goods" time="1970-01-01T00:07:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="hu3" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="collect4" type="Collect Goods" time="1970-01-01T00:08:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="hu4" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="load3" type="Load Truck" time="1970-01-01T00:09:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="hu3" qualifier="a"/>
+        <relationship object-id="container2" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="drive2" type="Drive to Terminal" time="1970-01-01T00:10:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="container2" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="ship1" type="Ship" time="1970-01-01T00:11:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="container1" qualifier="a"/>
+        <relationship object-id="container2" qualifier="a"/>
+      </objects>
+    </event>
+  </events>
+</log>

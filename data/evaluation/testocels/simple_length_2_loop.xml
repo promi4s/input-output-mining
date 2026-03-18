@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<log>
+  <object-types>
+    <object-type name="o">
+      <attributes/>
+    </object-type>
+  </object-types>
+  <event-types>
+    <event-type name="A">
+      <attributes/>
+    </event-type>
+    <event-type name="B">
+      <attributes/>
+    </event-type>
+    <event-type name="C">
+      <attributes/>
+    </event-type>
+    <event-type name="D">
+      <attributes/>
+    </event-type>
+  </event-types>
+  <objects>
+    <object id="o1" type="o">
+      <attributes/>
+    </object>
+  </objects>
+  <events>
+    <event id="A1" type="A" time="1970-01-01T00:00:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="o1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="B1" type="B" time="1970-01-01T00:01:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="o1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="C1" type="C" time="1970-01-01T00:02:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="o1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="B2" type="B" time="1970-01-01T00:03:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="o1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="D1" type="D" time="1970-01-01T00:04:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="o1" qualifier="a"/>
+      </objects>
+    </event>
+  </events>
+</log>

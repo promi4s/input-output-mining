@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<log>
+  <object-types>
+    <object-type name="A">
+      <attributes/>
+    </object-type>
+  </object-types>
+  <event-types>
+    <event-type name="Generate A">
+      <attributes/>
+    </event-type>
+    <event-type name="Use A">
+      <attributes/>
+    </event-type>
+  </event-types>
+  <objects>
+    <object id="a1" type="A">
+      <attributes/>
+    </object>
+    <object id="a2" type="A">
+      <attributes/>
+    </object>
+  </objects>
+  <events>
+    <event id="generate1" type="Generate A" time="1970-01-01T00:00:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="a1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="use1" type="Use A" time="1970-01-01T00:01:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="a1" qualifier="a"/>
+      </objects>
+    </event>
+    <event id="use2" type="Use A" time="1970-01-01T00:02:00">
+      <attributes/>
+      <objects>
+        <relationship object-id="a2" qualifier="a"/>
+      </objects>
+    </event>
+  </events>
+</log>
