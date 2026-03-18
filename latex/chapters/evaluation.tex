@@ -1,0 +1,962 @@
+\chapter{Evaluation}
+\label{chap:eval}
+
+\iffalse{
+In this chapter, you present your evaluation.
+You should have extensively discussed with your supervisor what you are evaluating and why \dots
+
+Some typical sections that you need here:
+\section{Experimental Setup}
+Describe the setup of your experiments.
+If you apply a pipeline of different techniques, show the pipeline.
+Present the parameters of your experiments in a table, and, describe them.
+Typical Elements:
+\begin{itemize}
+    \item Input Data Set(s) Used
+    \item Algorithm(s) Used
+    \item Parameter(s) Used
+    \item \dots
+\end{itemize}
+
+\section{Results}
+Show the results.
+Try to present your results as structured as you can.
+A good result (sub)section, follows the following structure:
+\begin{itemize}
+    \item Describe what results you are going to Show
+    \item Present an initial hypothesis about the results, e.g., We expect the quality metric M to behave like this, conditional to this parameter P.
+    \item Show the Results
+    \item Confirm the hypothesis.
+    \item If there are results that are not according to the hypothesis, you have to be able to explain why this is the case!!!
+\end{itemize}
+
+\section{Threats to Validity}
+Here you discuss any element of your experiments (usually depending on the setup), e.g., data sets used, parameters assessed, that might have implications for the validity of your results.
+For example, if you have not considered a specific range of parameter values, it is unclear how the algorithm will behave for these settings.
+If you have excluded certain data, this might have its implications for the generalizability of your results.
+In a way, this is the discussion section of your thesis.
+}\fi
+
+
+
+
+
+This chapter provides an evaluation of the object flow miner with the aim of assessing both its theoretical foundation and practical applicability.
+We divide this assessment into five sections that evaluate different aspects:
+\begin{enumerate}
+    \item
+    The results of the object flow miner when discovering basic constructs found in process logs, such as exclusive choice.
+    
+    \item
+    The quality of the object flow model discovered on publicly available OCELs.
+
+    \item
+    The usability of the model for waste detection.
+
+    \item
+    The runtime performance of the object flow miner.
+
+    \item
+    The applicability of the entire approach to LCA.
+\end{enumerate}
+
+
+
+\section{Detecting Basic Constructs}
+\label{chap:detecting-basic-constructs}
+
+
+In this section, we evaluate whether the proposed object flow miner detects some fundamental routing constructs encountered in practice~\autocite{van2004}.
+The handling of these constructs, namely exclusive choice, concurrency, loops, and long-term dependencies, establishes a baseline for what to expect in subsequent evaluations.
+We use mock object-centric logs with only a single object type and, therefore, we use simple event log notation defined in \autocite{van2016}.
+Therefore, this section simultaneously indicates the feasibility of the object flow miner as a classical, non-object-centric mining algorithm.
+We run the algorithm without filtering, and with the heuristic algorithm for initial inputs and final outputs.
+
+
+
+\subsection{Exclusive choice}
+
+
+In an exclusive choice construct, there are at least two transitions leaving a place, and choosing one excludes the other.
+The input log is $[\langle A, B, D \rangle, \langle A, C, D \rangle]$.
+\autoref{fig:eval-exclusive-choice} shows the discovered OFN.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/eval-exclusive-choice.pdf}
+    \caption{The discovered model, containing an exclusive choice between \emph{B} and \emph{C}.}
+    \label{fig:eval-exclusive-choice}
+\end{figure}
+
+
+However, we note that, while there is a split at an exclusive choice, there is not necessarily a join of the paths later.
+This is because the split is created locally, from two transitions that have similar input place candidates, and no measure is taken to combine the paths again.
+As an example, the log $[\langle A, B \rangle, \langle A, C \rangle]$ results in \autoref{fig:eval-exclusive-choice}.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/eval-split-but-no-join.pdf}
+    \caption{A model with a split but no join.}
+    \label{fig:eval-split-but-no-join}
+\end{figure}
+
+
+\subsection{Concurrency}
+\label{chap:parallelism}
+
+
+
+In a concurrent construct two activities can be executed in any order, but both must have been executed exactly once before continuing with the next activity.
+For $[\langle A, B, C, D\rangle, \langle A, C, B, D \rangle]$, the result is shown in \autoref{fig:eval-parallelism}.
+This underfitting model still supports every concurrent execution by using a silent transition after an activity fires.
+However, the model is less precise, as it allows for skipping activities $B$ or $C$ and also enables infinite loops.
+The reason is that there is no built-in mechanism for detecting concurrency; instead, silent transitions are generated because activity $B$ has succeeding activities $\{C, D\}$, so due to the addition of missing transitions in \cref{chap:adding-missing-transitions}, a path from $B$ to $D$ is created.
+In addition, because the preceding activities of $B$ are $\{A, C\}$, there is a silent transition incoming from $C$.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/eval-parallelism.pdf}
+    \caption{The discovered model, containing concurrent activities \emph{B} and \emph{C}.}
+    \label{fig:eval-parallelism}
+\end{figure}
+
+
+
+\subsection{Loops}
+
+
+
+There are two types of short loops~\autocite{van2004}, which have length $1$ or $2$.
+A length-1 loop, or self-loop, occurs when an activity immediately follows itself.
+These are detected correctly by the algorithm because of the specific step ensuring their handling.
+
+
+
+In a length-2 loop, two activities alternate, as in $[\langle A, B, C, B, D\rangle]$, where $B$ both begins and exits the loop.
+We again expect the algorithm to model these correctly, and it does, as shown in \autoref{fig:eval-length-2-loop}, since the input and output place candidates of activity $C$ are absorbed into the correct superplaces.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/eval-length-2-loop.pdf}
+    \caption{The discovered model of a length-2 loop involving \emph{B} and \emph{C}.}
+    \label{fig:eval-length-2-loop}
+\end{figure}
+
+
+
+Let us also consider a loop of length 3.
+In the example log $[\langle A, B, C, D, B, C, D, B, E\rangle]$, $B \rightarrow C \rightarrow D$ is executed twice (but more often does not change the argument), and then executes $B$ once again before the loop exits to $E$.
+The object flow miner finds this construct, see \autoref{fig:eval-length-3-loop-1}, a result that generalizes to more sophisticated loops that themselves contain constructs.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/eval-length-3-loop-1.pdf}
+    \caption{The discovered model for a loop involving \emph{B}, \emph{C} and \emph{D}, with a final \emph{B}.}
+    \label{fig:eval-length-3-loop-1}
+\end{figure}
+
+
+
+Let us also consider that the loop is exited in its final activity $D$ instead of running $B$ once more, so that the log becomes $[\langle A, B, C, D, B, C, D, E\rangle]$.
+The object-centric inductive miner implemented in \texttt{pm4py}~\autocite{pm4py}, the result of which is shown in \autoref{fig:eval-length-3-loop-inductive}, does not give a precise result for such a log; instead, a central place is created that enables going to $C$ immediately after $A$, or even looping $C$.
+In contrast to that, the object flow miner in \autoref{fig:eval-length-3-loop-2} correctly mines the intended Petri net.
+
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/eval-length-3-loop-inductive.pdf}
+    \caption{The discovered model using the object-centric inductive miner for a loop involving \emph{B}, \emph{C} and \emph{D}, without a final \emph{B}.
+    We modified the visualization of the Petri net to use the same style as OFNs to make comparison easier.
+    }
+    \label{fig:eval-length-3-loop-inductive}
+\end{figure}
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/eval-length-3-loop-2.pdf}
+    \caption{The discovered model using the object flow miner for a loop involving \emph{B}, \emph{C} and \emph{D}, without a final \emph{B}.}
+    \label{fig:eval-length-3-loop-2}
+\end{figure}
+
+
+
+\subsection{Non-free Choice Constructs}
+\label{chap:nonlocal-dependencies}
+
+
+
+One type of a non-free choice construct is a long-term dependency~\autocite{van2016}, which occurs when a transition depends on another transition that does not directly precede it.
+Consider the log $[\langle A, C, D\rangle^{45}, \langle B, C, E \rangle^{42}]$~\autocite{van2016}.
+We assume that the high frequencies mean that if $A$ is executed, $D$ must be executed after $C$, and also that if instead $B$ is executed first, then $E$ follows $C$.
+These dependencies can be realized through implicit places, which are input places to the later transition.
+However, since the purpose of the object flow miner is to ensure that every target place of a transition corresponds to a specific output object type, the algorithm can never produce an implicit place that would be necessary to ensure this behavior.
+Furthermore, this raises the question of what object type an implicit place should have in general.
+Nonetheless, the result of the object flow miner in \autoref{fig:eval-nonlocal-dependencies} can still replay the log, albeit with lower precision.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/eval-nonlocal-dependencies.pdf}
+    \caption{The discovered model which does not respect the long-term dependency.}
+    \label{fig:eval-nonlocal-dependencies}
+\end{figure}
+
+
+
+We recognize that for the general object flow, information carried through an implicit place would be relevant, including in the context of waste detection.
+It would enable a more direct tracing of waste objects by visualizing that the waste in an activity having a long-term dependency is only created if previously another transition was taken.
+Therefore, we suggest an extension of the algorithm as future work, which detects long-term dependencies and gives them a special object type.
+
+
+
+
+Another type of non-free choice construct is the mix of concurrency and exclusive choice, as in $[\langle A, B, C, D \rangle, \langle A, C, B, D \rangle, \langle A, E, D \rangle]$~\autocite{van2016}.
+The object flow miner discovers an object flow net that contains the exclusive choice, and represents the concurrency between $B$ and $C$ by the underfitting concurrent construct already introduced in \cref{chap:parallelism}.
+The model is shown in \autoref{fig:eval-nonfree-choice}.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/eval-nonfree-choice.pdf}
+    \caption{The discovered model for the non-free choice construct.}
+    \label{fig:eval-nonfree-choice}
+\end{figure}
+
+
+
+\subsection{Conclusion}
+
+
+
+In summary, the object flow miner detects many constructs found in practice.
+However, as just discussed, it lacks ideal modeling of concurrency and long-term dependencies.
+This is a potential improvement for future work.
+
+
+
+Since the object flow miner requires only timestamps and no qualifiers, it can be applied to classic event logs if only a single object type exists, which is interpreted as the case identifier.
+We therefore suggest research into employing the object flow miner specifically on classic event logs.
+In contrast to the $\alpha$-miner, it incorporates silent transitions and multiple labels, although an extension to the $\alpha$-miner, the $\alpha^{++}$ algorithm~\autocite{van2007}, can discover certain long-term dependencies, which the object flow miner never manages.
+
+
+
+\section{Discovered Models on Public Logs}
+\label{chap:eval-quality}
+
+
+
+Having established the handling of the theoretical constructs, in this section we evaluate models discovered by the object flow miner on publicly available OCELs.
+We analyze the output with different levels of filtering and included resources, and we are especially interested in the replay fitness and simplicity of the models.
+This is the quantitative perspective of our evaluation.
+Our model should inherently limit generalizability, since although loops should generalize, our goal is to visualize the existing log and the existing material flow accurately, not offering a general model at the cost of imprecise descriptions of reality.
+We are also interested in where logs result in unexpected, confusing, or hard-to-interpret models, and what the cause of that is.
+This is the qualitative perspective.
+
+
+
+We use four public OCELs.
+These are the container logistics, order management, procure-to-pay, and hinge production log.
+We evaluate the hinge production log separately in the evaluation, with a special focus on waste detection.
+
+
+
+
+
+
+\subsection{Quantitative Results}
+
+
+
+\subsubsection{Setup}
+
+
+For the four logs, our method for heuristically finding initial inputs and final outputs given in the implementation in \cref{chap:finding-initial-final} is used with the object flow miner.
+Furthermore, we use variable arcs for all models.
+This makes them smaller and match the fitness calculation better.
+In addition, we vary the following parameters:
+\begin{enumerate}
+    \item 
+    \textbf{Resources}: We run the miner with or without resources filtered out.
+
+    \item
+    \textbf{Filter}: The $\alpha$ and $\beta$ parameters from our section on filtering.
+
+    \item 
+    \textbf{Max. Comp.}: The maximum size at which a connected component of objects is split. This is necessary to reduce the computational complexity of the calculation. For details, see the description of how fitness is calculated.
+\end{enumerate}
+
+
+For the logs, we give two values regarding its size:
+\begin{enumerate}[start=4]
+    \item
+    \textbf{\#OT}: The number of object types.
+
+    \item 
+    \textbf{\#E2O}: The size of the $E2O$ relation.
+\end{enumerate}
+
+
+Using these inputs, we run the object flow miner, which produces an OFN model.
+The workflow is illustrated in \autoref{fig:evaluation-flowchart}.
+The OCEL is the input in blue.
+In purple, the numerical indicators that we quantify are shown.
+These are the following:
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/evaluation-flowchart.png}
+    \caption{The workflow of our evaluation. Created with Whimsical (\url{https://whimsical.com}).}
+    \label{fig:evaluation-flowchart}
+\end{figure}
+
+
+
+\begin{enumerate}[start=6]
+    \item 
+    \textbf{Fitness}: The replay fitness, which is computed using non-object-centric alignments.
+To get a classic event log, the input OCEL is flattened to the connected components of each object type.
+The discovered OFN is filtered to contain only places of that object type and no places with the unknown role.
+An initial marking is created for every object that is an initial input, and a final marking for the final output objects.
+The weight of each arc in the filtered OFN is set to $1$.
+This allows replaying variable arcs by moving each token individually, but also allows for more behavior.
+The transformed OFN is interpreted as a classic Petri net.
+The fitness of the connected component as a single case is then calculated using alignments of the flattened log on the Petri net.
+However, as some logs have large connected components that result in the computation taking too long or requiring too much memory, the \emph{Max Comp.} parameter splits components at the cutoff size.
+This reduces the fitness, and is the reason why the unfiltered container logistics logs have a fitness very close to $1$, but slightly lower.
+In rare cases, it was not possible to calculate an alignment using the \texttt{pm4py} library because the filtered Petri net was not an easy-sound net.
+In that case, we set the fitness of the trace to $0$.
+
+The \emph{Fitness} is calculated by an equally weighted average of the average fitness of each flattened object type.
+This is done in order to prevent object types that occur more often from having a greater influence.
+The computation of the fitness for the order management log with resources was too resource-intensive for our machine, which is why these rows have missing values marked with a hyphen.
+
+
+    \item 
+    \textbf{Highest OT}: The average fitness of the flattened object type with the highest average fitness.
+
+    \item 
+    \textbf{Lowest OT}: The average fitness of the flattened object type with the lowest average fitness.
+    
+    \item 
+    \textbf{Simplicity}: An indicator between $0$ and $1$ based on the inverse arc degree~\autocite{blum2015metrics}.
+
+    \item 
+    \textbf{Size}: The total number of transitions and arcs.
+
+    \item 
+    \textbf{Silent Ratio}: The ratio of silent to all transitions.
+
+    \item 
+    \textbf{Dupl.}: As the object flow miner discovers transitions with the same label, this is the highest number of transitions labeled the same.
+\end{enumerate}
+
+
+
+\subsubsection{Results}
+
+
+In \autoref{tab:evaluation}, we present the results.
+Fitness ranges from $1$ to $0$, simplicity from $0.7551$ to $0.1470$, and size from $902$ to $80$.
+This underlines that our evaluation contains sufficient variation.
+In the following, we analyze each log in detail, with the same parameters that were used in the table.
+
+
+
+\begin{sidewaystable}[p]
+\centering
+\small
+\resizebox{\textheight}{!}{% Note: Use \textheight because the table is rotated
+\begin{tabular}{C{3.5cm} C{1.4cm} C{1.3cm} C{1.3cm} C{1.3cm} C{1.5cm} C{1.3cm} C{1.5cm} C{1.5cm} C{1.3cm} C{1.3cm} C{1.1cm}}
+\toprule
+\multicolumn{3}{c}{\textbf{Parameters}} & \multicolumn{2}{c}{\textbf{Log Size}} & \multicolumn{7}{c}{\textbf{Results}} \\
+\cmidrule(lr){1-3} \cmidrule(lr){4-5} \cmidrule(lr){6-12} 
+\textbf{Log Name} & \textbf{Filter} & \textbf{Max Comp.} & \textbf{\#OT} & \textbf{\#E2O} & \textbf{Fitness} & \textbf{Highest OT} & \textbf{Lowest OT} & \textbf{Simplicity} & \textbf{Size} & \textbf{Silent ratio} & \textbf{Dupl.} \\
+\midrule
+
+\makecell{Container Logistics, \\ with resources} & - & 20 & 7 & 74272 & \cellcolor{green!64}0.9934 & 1 & 0.9535 & \cellcolor{green!22}0.3286 & \cellcolor{green!50}278 & 0.10 & 7 \\
+
+\makecell{Container Logistics, \\ with resources} & $\alpha = 0.1$ & 20 & 7 & 74272 & \cellcolor{green!31}0.4393 & 0.99 & 0 & \cellcolor{green!27}0.3750 & \cellcolor{green!60}136 & 0.21 & 3 \\
+
+\makecell{Container Logistics, \\ no resources} & - & 20 & 4 & 51137 & \cellcolor{green!64}0.9885 & 1 & 0.9540 & \cellcolor{green!38}0.4861 & \cellcolor{green!57}177 & 0.07 & 7 \\
+
+\makecell{Container Logistics, \\ no resources} & $\alpha = 0.1$ & 20 & 4 & 51137 & \cellcolor{green!46}0.6991 & 0.9995 & 0.2513 & \cellcolor{green!47}0.5758 & \cellcolor{green!64}90 & 0.15 & 3 \\
+
+\midrule
+
+\makecell{Procure-to-Pay} & - & 50 & 7 & 35927 & \cellcolor{green!65}1.0000 & 1 & 1 & \cellcolor{green!7}0.1733 & \cellcolor{green!50}285 & 0 & 20 \\
+
+\makecell{Procure-to-Pay} & $\alpha = 0.1$ & 50 & 7 & 35927 & \cellcolor{green!60}0.9182 & 1 & 0.5351 & \cellcolor{green!26}0.36 & \cellcolor{green!63}104 & 0 & 2 \\
+
+\midrule
+
+\makecell{Order Management, \\ with resources} & - & 8 & 6 & 147463 & \cellcolor{gray!20}\textit{-} & \cellcolor{gray!20}\textit{-} & \cellcolor{gray!20}\textit{-} & \cellcolor{green!5}0.1470 & \cellcolor{green!5}902 & 0.46 & 17 \\
+
+\makecell{Order Management, \\ no resources} & - & 8 & 6 & 147463 & \cellcolor{gray!20}\textit{-} & \cellcolor{gray!20}\textit{-} & \cellcolor{gray!20}\textit{-} & \cellcolor{green!22}0.3258 & \cellcolor{green!45}349 & 0.63 & 8 \\
+
+\makecell{Order Management, \\ no resources} & $\alpha = 0.1$ & 8 & 3 & 71196 & \cellcolor{green!30}0.4271 & 0.6410 & 0.0119 & \cellcolor{green!33}0.4359 & \cellcolor{green!51}270 & 0.82 & 2 \\
+
+\makecell{Order Management, \\ no resources} & \makecell{$\alpha = 0.1$, \\ $\beta = 0.2$} & 8 & 3 & 71196 & \cellcolor{green!5}0.0000 & 0 & 0 & \cellcolor{green!41}0.5122 & \cellcolor{green!63}104 & 0.35 & 2 \\
+
+\midrule
+
+\makecell{Hinge Production, \\ no resources} & - & 50 & 9 & 67800 & \cellcolor{green!65}1.0000 & 1 & 1 & \cellcolor{green!65}0.7551 & \cellcolor{green!65}80 & 0 & 3 \\
+
+\bottomrule
+\end{tabular}
+}
+\caption{The results of the evaluation on public OCELs.}
+\label{tab:evaluation}
+\end{sidewaystable}
+
+
+
+
+
+
+
+\subsection{Container Logistics}
+
+
+\iffalse{
+The process model according to the authors is shown in \autoref{fig:overview-container-logistics}.
+In this model, note that our goal is not finding what is annotated as material flow in the legend of the image, but we rather treat each object type as an abstract material, which can include trucks or forklifts, for example.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/overview-container-logistics.pdf}
+    \caption{Conceptual model of the container logistics log~\autocite{containerlogistics}.}
+    \label{fig:overview-container-logistics}
+\end{figure}
+
+The discovered model is not identical to the model given by the authors because some details are not shown in the latter visualization, for example that \emph{Transport Document}s are related \emph{Depart}.
+
+}\fi
+
+
+
+The container logistics log~\autocite{containerlogistics} contains a flow of goods, specifically how these are ordered, loaded onto containers, and shipped.
+On the OCEL with resources and no filtering, the object flow miner achieves a fitness of nearly 100\%.
+Filtering out configurations that make up less than 10\% of their activity results in decreasing the size from $278$ to $136$, but the fitness decreases to $43.93\%$.
+This model, depicted in \autoref{fig:container-logistics-full}, shows the material flow read from top to bottom, beginning by creating an order, then booking vehicles, ordering a container, filling it with goods while loading it onto a truck, which then drives to the terminal, where the container is weighed.
+After that, it is either placed in stock or brought directly to the loading bay, visualized through the silent \emph{$\tau$ (Bring to Loading Bay)} transition, and afterward optionally rescheduled or directly loaded, and then it finally departs.
+This demonstrates that the object flow visualized in the model is clear, indicating that even a model with a low fitness can serve as a process model.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{figures/container-logistics-full.pdf}
+    \caption{Output of the object flow miner on the container logistics log, with 10\% filtering on configurations.}
+    \label{fig:container-logistics-full}
+\end{figure}
+
+
+
+Here, the object types \emph{Forklift} (pink), \emph{Vehicle} (orange) and \emph{Truck} (red) have a lot of self loops, so we identify these as resources.
+By filtering them out, we get \autoref{fig:container-logistics-filtered}, which shows the intangible material flow.
+This has a size of only 90, and a fitness of 69.91\%.
+It demonstrates that filtering out resources is beneficial, and the object flow miner can discover models of a small size with a good fitness.
+
+
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.3\textwidth]{figures/container-logistics-filtered.pdf}
+    \caption{Output of the object flow miner on the container logistics log, with 10\% filtering on configurations and filtering out \emph{Forklift}, \emph{Vehicle} and \emph{Truck}.}
+    \label{fig:container-logistics-filtered}
+\end{figure}
+
+
+\iffalse{
+The material flow is interpreted as follows.
+Consider the transition \emph{Reschedule Container} at the left.
+A rescheduling takes place on a \emph{Container} in blue and a \emph{Transport Document} in purple.
+The container is rescheduled, so some modification of the transport document is necessary.
+The transport document is emitted to the same place again, ready for the \emph{Depart} transition, while the container is ready after rescheduling as well and placed in a different place, where it can be loaded onto a vehicle next.
+If no rescheduling was necessary for the container, the silent transition right to the activity can be taken to avoid the rescheduling process altogether.
+Visualizing this kind of material flow is exactly the purpose of the object flow miner, and on this log it performs well in this regard.
+
+}\fi
+
+
+
+
+\subsection{Procure to Pay}
+
+
+
+\iffalse{
+There is no provided conceptual model, so we instead summarize the textual description of the process.
+First, a purchase requisition is created, which means that an employee intends to buy a product.
+This is approved and price quotations are collected from vendors of the product.
+From the selected quotation, a purchase order is created, which is approved and causes the vendor to send the requested product.
+Once that is received, a receipt and invoice for the good are created.
+Both are checked and the company pays the vendor~\autocite{procuretopay}.
+
+}\fi
+
+
+
+In the procure-to-pay~\autocite{procuretopay} log, the object flow is the flow of a purchase order through the procurement division of a company.
+The Petri net model without filtering is shown in \autoref{fig:p2p-full}.
+It has perfect fitness.
+Even though the lower part of the Petri net is hard to read, it still serves the purpose of telling the user of the algorithm that there are many configurations of \emph{Execute Payment}, which can be used to revise the complexity of the process and whether this is intended.
+The quantitative evaluation in \autoref{tab:evaluation} indicates that there are 20 identically labeled transitions in this model.
+Thus, even when the object flow miner creates a model that is too complex to handle by hand, this model can carry valuable information about the process, specifically which transitions contribute to the complexity.
+After inspecting the \emph{Execute Payment} configurations, much of their variability comes from different multiplicities on input or output objects, since two configurations that are identical except for one having cardinality $1$ and the other $\text{>1}$ on a single object are considered separate by the algorithm.
+Therefore, as a future improvement of the algorithm, we suggest optional abstractions over variable arcs, such as absorbing a configuration with a $1$-cardinality into an otherwise identical configuration with a >1-cardinality on the same object type, turning it into a $\geq$1-cardinality.
+
+
+
+\begin{sidewaysfigure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth, height=\textheight, keepaspectratio]{figures/p2p-full.pdf}
+    \caption{Output of the object flow miner on the procure-to-pay log, without filtering.}
+    \label{fig:p2p-full}
+\end{sidewaysfigure}
+
+
+
+By filtering out 10\% of configurations, the discovered OFN in \autoref{fig:p2p-filtered} becomes readable and usable for the purpose of visualizing the process.
+This filtering step doubled the simplicity of the model and reduced the size from $285$ to $104$, but the fitness is still high at 91.82\%.
+Only two \emph{Execute Payment} transitions remain, whereas unfiltered there were 20.
+One of these takes multiple \emph{purchase\_order}s and \emph{goods\_receipt}s, while the other takes one each.
+Thus, this is an example of an OCEL where a simple yet fit model is discovered by the object flow miner.
+
+
+We point out that our model can aid in the detection of anomalies such as maverick buying.
+The model shows this by the lower \emph{purchase\_requisition} that is an initial input, to the right of the intended purchase requisition that is the output of \emph{Approve Purchase Requisition} or \emph{Delegate Purchase Requisition Approval}.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/p2p-filtered.pdf}
+    \caption{Output of the object flow miner on the procure-to-pay log, using 10\% filtering on configurations.}
+    \label{fig:p2p-filtered}
+\end{figure}
+
+
+
+
+\subsection{Order Management}
+\label{chap:eval-order-management}
+
+
+
+
+\iffalse{
+Its conceptual process model given by the authors is shown in \autoref{fig:order-management-model}.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/order-management-model.pdf}
+    \caption{Conceptual model of the order management log~\autocite{ordermanagement}.}
+    \label{fig:order-management-model}
+\end{figure}
+
+}\fi
+
+The order management log~\autocite{ordermanagement} describes the handling of orders in a warehouse, where an order is issued that can contain multiple items, each of a specific product, that are shipped to a customer who pays for the order.
+This log is an example in which the model discovered by the object flow miner is very large, with a size of $902$, the highest in our evaluation.
+It was too complex to calculate the fitness.
+We filter out the resource \emph{products}, the handling unit \emph{items}, as well as \emph{employees} and \emph{customers} because these are classic resources that deal with many different orders.
+Still, the fitness computation even without resources did not terminate.
+
+
+
+If we additionally enable filtering out configurations below 10\% prevalence, the created model, depicted in \autoref{fig:order-management-full}, has a size of $270$, but is still hard to read.
+One reason is that all items of an order are related to activities \emph{confirm order}, \emph{payment reminder} and \emph{pay order}, even though conceptually these activities should only be related to \emph{Order}s, not the \emph{Item}s of each order as well.
+Because these activities can occur concurrently with the item handling activities such as \emph{pick item} and \emph{create package}, the result is that there are many concurrent activities with regard to the \emph{Item} type.
+As discussed previously, this concurrency then results in constructs with silent transitions.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/order-management-full.pdf}
+    \caption{Output of the object flow miner on the order management log, filtering out \emph{products}, \emph{employees} and \emph{customers} and using 10\% filtering on configurations.}
+    \label{fig:order-management-full}
+\end{figure}
+
+
+Another reason for the large model is that there is the further difficulty that some events occur simultaneously, only conforming to a partial order of events, while we assumed a total order.
+For example, \emph{pick item} and \emph{create package} of the same item are sometimes recorded at the same timestamp, where the algorithm implementation is non-deterministic about which activity is considered first.
+This then causes more silent transitions to be created, which connect the two activities.
+The depicted model has a high ratio of 82\% silent transitions for these two reasons.
+
+
+
+In addition to the 10\% filter on configurations, we can use the filter on preceding and succeeding activities to reduce silent transitions, since if an activity is filtered out of the list of next activities, no silent transition is drawn for it.
+Filtering by 20\%, we obtain a simple and readable model; see \autoref{fig:order-management-filtered}.
+This model has only 35\% silent transitions, and only a size of 104, in contrast to a size of 349 for the full model without resources.
+However, one can note that at the very top, an orange \emph{items} place does not have any incoming arcs, but is not marked as an initial input.
+This occurs because the incoming arcs were filtered out.
+It demonstrates that even though there exist filtering capabilities for logs as complicated as this one, the structure of the model can be impacted.
+This is underlined by the fact that this heavily filtered model has a fitness of 0\%.
+In summary, the level of concurrency is not handled well by the object flow miner, and violating an assumption is also the cause of a complex model.
+Filtering works, but fitness drops to 0 as a result.
+
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{figures/order-management-filtered.pdf}
+    \caption{Output of the object flow miner on the order management log, filtering out \emph{products}, \emph{employees} and \emph{customers}, and using 10\% filtering on configurations and 20\% on preceding and succeeding activities.}
+    \label{fig:order-management-filtered}
+\end{figure}
+
+
+
+\subsection{Conclusion about the Model Discovery}
+
+
+
+Overall, without filtering, the public OCELs generated very large models that are difficult to handle for a human.
+This is an inherent trait of the object flow miner, since every different configuration, even if they differ only by a single multiplicity, generates a new transition and its corresponding places and arcs.
+Although this hinders the usability of the model as a process reference, we argue that the purpose of the model is showing the inputs and outputs of each configuration in the log, and, thereby, visualizing the as-is process more than finding an abstract, underlying model.
+The unfiltered models achieved a fitness equal to or close to 100\% at the cost of a large size and low simplicity.
+
+
+
+There may be a large number of silent transitions, since each silent transition only consumes and produces a single object type, with multiplicity one.
+Some logs with many relationships for each event, such as the order management log, generate many places with slightly different inputs and outputs, which cannot be simplified.
+As a result, many silent transitions are created to move between the places and achieve a fit model, which generates clutter and reduces readability.
+For future work, we suggest improving silent transitions to handle multiple object types and correct multiplicities.
+
+
+
+If, instead of in-depth process analysis, the object flow miner is applied to discover a visual model of the object flow, the filtering methods are powerful tools.
+We managed to discover usable models through appropriate filtering for every log.
+In that case, fitness is sacrificed for simplicity.
+
+
+
+The evaluation shows that our algorithm is suitable not only for strictly material flow, but for all kinds of handling units such as orders and shipments.
+This shows that while the object flow miner was developed with material flow analysis in mind, it functions as a general process discovery algorithm, providing an alternative model to other object-centric discovery algorithms.
+This may be especially useful in situations where a classic Petri net is desired as an output.
+In summary, based on our testing OCELs, the object flow miner achieves its goal of showing the material flow of the inputs and outputs of the process and each configuration.
+In addition, it can also be used for the purpose of discovering a general process model.
+
+
+
+\subsection{The Role of Resources}
+
+
+
+In three logs, we filtered out resources prior to applying the object flow miner, because they can cause issues such as complicated models and very long runtimes (see \cref{chap:runtime}).
+However, resources carry information, and waste detection could be improved by associating waste with the resources related to it.
+For example, suppose that a \emph{Machine} produces parts that are checked for abnormalities, and one specific machine produces parts that are much more likely to be malformed.
+Detecting this \emph{cause} of waste can be done by taking resources better into account, which we suggest for future work.
+
+
+
+
+
+\section{Waste Detection}
+\label{chap:evaluate-waste-detection}
+
+
+The logs considered in the previous section did not contain waste or a mass attribute.
+In this section, we evaluate the waste annotation with the hinge production log.
+First, it is necessary to discover an appropriate process model, in a manner similar to the previous sections, but with the addition of MFA that takes advantage of the mass attribute that is present.
+Then, on this model, we annotate various quantifications of the waste either as a count of objects or as mass.
+The result shows that the implicit system-wide waste and waste on output object types can be visualized in the model.
+Furthermore, this works for both the mass and count of waste.
+In order to have a valid baseline, we modified the hinge production log in such a way that every object has a mass attribute and the mass-balance principle holds.
+
+
+
+\subsection{Discovering the Model}
+\label{chap:eval-hinge-production}
+
+
+
+The hinge production log~\autocite{hingeproduction} is a simulated log that describes the production of hinges from steel in a factory.
+The conceptual model is given in \autoref{fig:hinge-production-model}, where the factory and the workstations that visually span other activities are resources, and the worker and machine names to the left of an activity are also resources.
+The remaining gray boxes are handling units, which are transformed by the activities in white boxes.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/hinge-production-model.pdf}
+    \caption{Conceptual model of the hinge production log~\autocite{hingeproduction}.}
+    \label{fig:hinge-production-model}
+\end{figure}
+
+
+
+First, we build a process model.
+We filter out the object types that are resources and apply the object flow miner with heuristics, which gives \autoref{fig:hinge-production-noresources}.
+The model accurately reflects the material flow shown in the conceptual model, and further filtering is not necessary.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figures/hinge-production-noresources.pdf}
+    \caption{Output of the object flow miner on the hinge production log, without resources \emph{Facility}, \emph{Workstation}, \emph{Machine} and \emph{Worker}.}
+    \label{fig:hinge-production-noresources}
+\end{figure}
+
+
+
+There are dashed double arcs for the \emph{SplitWaste} (yellow), \emph{CutWaste} (red), and \emph{SteelPin} (dark blue) object types, which indicate that the role of these is unknown.
+The transitions related to these places fall under the fallback case in our heuristics due to a transformation involving different inputs and outputs.
+From the perspective of the algorithm, it is not possible to know whether \emph{SteelPin} is an initial input or final output, because it only sees the transformation of a \emph{FemalePart} and a \emph{MalePart} into a \emph{Hinge}.
+
+
+
+We can use MFA to determine the roles of these unknown object types.
+In addition to that, we give two hints to the algorithm, which partially defines the role functions.
+First, we hint that the \emph{SplitWaste} object type is always a final output, since it is currently falsely classified as an initial input.
+Second, we hint that \emph{SteelSheet} is not an initial input, which is necessary when combined with the previous suggestion.
+
+
+
+We set the two hints and perform MFA to resolve the roles.
+It assigns \emph{final output} to \emph{CutWaste} and \emph{initial input} to \emph{SteelPin}, both correctly.
+Overall, it calculates an input mass of $130.54304$ kg and an output mass of $130.16622$ kg.
+This difference of less than 0.3\%, which in strict terms violates the mass-balance principle, is due to the SteelCoil retaining some mass after all sheets are cut.
+This remaining mass is not added to the total output mass because \emph{SteelCoil} is classified only as an initial input.
+Another reason is that \emph{SteelPin} is a final output on the bottom right, although it should be an initial input.
+This represents an anomaly where the hinge is not packed in any \emph{HingePack}.
+But since these mistakes made by the algorithm occur only a few times, the resulting difference in mass is small.
+The model after applying MFA is shown in \autoref{fig:hinge-production-resolved}.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figures/hinge-production-resolved.pdf}
+    \caption{Output of the object flow miner on the hinge production log, without resources and with hints and MFA applied.}
+    \label{fig:hinge-production-resolved}
+\end{figure}
+
+
+The discovered OFN has a simplicity of 75.51\%, the highest in our evaluation, a low size of 80, and perfect fitness.
+
+
+In the creation of the model, it was necessary to give two hints to the algorithm.
+After that, the algorithm resolves unknown roles based on the mass-balance principle.
+This shows that the heuristic algorithm is sometimes insufficient, but it is possible to intervene by providing a number of correct assumptions to take, and the remainder of the work is still done correctly and automatically.
+Edge cases such as the \emph{SteelCoil} that contributes both to the input and output mass might not be handled incorrectly.
+As a result, in this example that fulfills mass balance in theory, the algorithm does not fully achieve it.
+We do not consider this invalidating for our method, since the mass difference is small and the mass-balance principle is seldom fulfilled in practice in any case~\autocite{ayres1995}.
+
+
+
+\subsection{Waste Annotation}
+
+
+
+Next, we annotate the model with waste.
+In the hinge production log, waste occurs explicitly in the waste object types \emph{SplitWaste} and \emph{CutWaste}.
+There are also objects that are not usually waste but can be if they are not used further after their creation, which is the case for \emph{FormedPart}, \emph{FemalePart}, \emph{MalePart}, \emph{SteelPin} and \emph{Hinge}.
+This can be seen by the final output places of these object types, while the process is not finished yet.
+In addition, the \emph{SteelCoil} object type is transformed into \emph{SteelSheet}s, but a small rest of the coil that is too small to be split remains, which is not explicitly given as waste in the log.
+
+
+
+To detect this implicit waste, we show implicit waste in the \emph{SplitSteelSheet} transitions, since that is where the steel coil is used.
+Additionally, we display the mass of the \emph{CutWaste} and \emph{SplitWaste} object types.
+To find out more details about the objects that are not used further, we show the total count of objects for the \emph{FormedPart}, \emph{FemalePart}, and \emph{MalePart}.
+
+
+We also show the mass on the initial inputs \emph{SteelCoil} and \emph{SteelPin}.
+This is achieved by modifying the definition of $owaste$ to use the $Initial$ set.
+While this is not waste, we include this annotation in order to get a model of the entire inventory, to automate the LCI analysis.
+
+
+Contrary to our assumption, this log has object attribute changes.
+We had to adapt our code slightly to use the changed object attribute instead of statically using the object attribute.
+
+
+
+The resulting annotated object flow net is shown in \autoref{fig:hinge-production-annotated}.
+In the \emph{SplitSteelSheet} transitions, we can see that only the transition that ends the loop of \emph{SteelCoil} contains implicit waste, showing the average per event and the total for the configuration, which is expected since that is where the unused remainder of the steel coil is relevant.
+Both numbers are given in the unit of our mass (kg), but which is not rendered because the approach is unit-agnostic.
+Without the discovered object flow it would not be possible to detect this implicit waste as it is not directly given in the log.
+
+
+The average and total waste mass is shown for the waste object types \emph{CutWaste} and \emph{SteelWaste}.
+In addition, we can see that $8$ and $7$ \emph{FemalePart} and \emph{MalePart}, respectively, are filtered out during their check.
+These numbers are given as absolute frequencies, since they are just counts of the object instances, so the average would simply be $1$.
+The same type of count is shown for \emph{FormedPart}, so it can be seen how often a \emph{FormedPart} is produced but not used anymore --- which is $82$ times.
+
+
+
+The masses are given on the initial inputs \emph{SteelCoil} \emph{SteelPin} as well.
+This shows that our algorithm is not limited to waste or even final outputs, but in general all inputs and outputs of the process, either simply by count or quantified by some attribute.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures/hinge-production-annotated.pdf}
+    \caption{The waste annotated model of the hinge production log.}
+    \label{fig:hinge-production-annotated}
+\end{figure}
+
+
+
+
+This flexibility makes the annotated hinge production model a suitable solution to the LCI analysis phase.
+After giving the hints, the model is an accurate representation of the material flow, and transformations of materials.
+The average and total mass of the waste object types \emph{CutWaste} and \emph{SteelWaste} is shown, which could be used in environmental reporting, or to plan the necessary transport to waste facilities.
+One can see the anomaly that $82$ \emph{FormedPart}s instances are not cut, which is information about probably unintended waste, which is clearly visible in the model, which therefore makes it possible to deal with this issue.
+For future work, we suggest that it becomes possible to view the exact properties of these $82$ formed parts, in particular object attributes and the path they took through the process.
+This could reveal commonalities, such as a supply of inferior quality.
+By also showing information about the initial input mass for \emph{SteelCoil} and \emph{SteelPin}, the model incorporates data that is useful for the LCI analysis.
+
+
+
+It should not be understated that, assuming no major process changes, the model can be run on updated data at any time and without further adjustments and will immediately reflect the new data.
+If the LCI analysis were performed by hand, the new data would require manual recalculation of the waste.
+In fact, even process changes do not pose a significant amount of work, since the detection of the model is mostly automatic.
+
+
+
+
+
+
+
+
+
+
+\section{Runtime Performance}
+\label{chap:runtime}
+
+
+
+We measure the runtime of the object flow miner for the previously discovered models, to evaluate how feasible it is to run in practice.
+Executing the program in that scenario involves three steps.
+First, the log is read from a file.
+Second, the implementation described in \cref{chap:finding-initial-final}, which finds initial inputs and final outputs, computes the role functions.
+Third, the algorithm is run on the log.
+For the hinge production log, we include another step for resolving unknown roles through applying MFA, before the algorithm is run.
+We hypothesize that the runtimes are acceptable for research software.
+
+
+
+We first measure the runtime without any modification of the log as a baseline.
+For determining realistic runtimes, we use the parameters described for each OCEL in the previous chapter.
+Filtering out object types that are resources is part of the log reading, since these are filtered out prior to giving the log to the object flow miner.
+The filters on configurations and on preceding and succeeding activities is part of the algorithm runtime.
+
+
+
+The experiments were run on a computer with an AMD Ryzen 7 5800H CPU, with Python version $3.13.7$, and the \texttt{pm4py}~\autocite{pm4py} package on version $2.7.15$.
+Every log was first converted to the SQLite format~\autocite{ocel20} using \texttt{pm4py}, since prior experiments revealed that this format is the fastest when reading the log.
+Before running the measurements, there was a preparation run of the program in case later executions of the same program are faster because of Python optimizations.
+For the end result, every program was run ten times and the runtime averaged, after checking for significant outliers, of which there were none.
+The results for unmodified OCELs without filtering are shown in \autoref{fig:runtime-everything}, and the results for the realistic parameters in \autoref{fig:runtime-realistic}.
+
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/Everything.png}
+    \caption{Runtime of the algorithm and setup using the unmodified public OCELs.}
+    \label{fig:runtime-everything}
+\end{figure}
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/Usable.png}
+    \caption{Runtime of the algorithm and setup using realistic parameters as described in \cref{chap:eval-quality} for each OCEL.}
+    \label{fig:runtime-realistic}
+\end{figure}
+
+
+
+We can see that in both scenarios, the calculation of the role functions took up the majority of time, while reading the log was similar, and the object flow miner itself was very fast, taking at most $1.2$ seconds for the unmodified order management log.
+Overall, except for the unmodified hinge production with $47.042$ seconds, the total runtimes do not exceed $15.244$ seconds.
+The reason that the hinge production log takes the longest is the presence of resources, some of which are related to every single event of an activity, and therefore thousands in total.
+Filtering them out to reduce global dependencies decreases the calculation to less than 20\% of the unfiltered runtime.
+Thus, in summary, we consider the runtime to be acceptable.
+
+
+
+The heuristic method for computing the role functions $role_{in}$ and $role_{out}$ given in our implementation takes up most of the processing time in our evaluation.
+These functions can be calculated separately for each event, and do not depend on each other in any form.
+This independent nature of our implementation allows good performance, but information could be gained from comparing similar events.
+In an event, it may be possible to infer the role functions by analyzing the roles in similar events.
+This could be especially useful for automatically amending errors in the log, and is left for future work.
+
+
+
+We saw that large models were an issue multiple times in our evaluation, mainly caused by small differences that result in creating new configurations.
+It was possible to remove these configurations through basic filtering, but improvements at the algorithm level could produce a better result.
+For example, suppose that an activity \emph{take order} takes \emph{product} objects as an input.
+There can be many configurations of \emph{take order}, as each number of related products in the log generates a different configuration when using arc weights.
+Because the number of products does not change the handling of the order, it would make sense to merge the configurations into one.
+This would sacrifice fitness for simplicity, as it shows an idealized process model.
+The current implementation is still necessary for visualizing the process as-is.
+
+
+
+\section{Applicability to LCA}
+
+
+
+The original goal and direct application of the object flow miner is to aid in life cycle assessment.
+This section synthesizes the previous points on model quality, usability and performance to provide a holistic assessment of how well the object flow miner and waste annotation method achieve this goal.
+For that, we have pointed out how the main use of process mining in an LCA is in the data-driven LCI analysis phase.
+During this phase, the inputs and outputs of the process are collected, and optionally a model relating them is created.
+Often, a material flow analysis is used for this phase, which includes the mass-balance principle to ensure consistency.
+
+
+
+As mentioned in \cref{chap:prelim-life-cycle-assessment}, in the LCI analysis phase, it is the standard procedure to calculate the environmental impact in proportion to a single unit of the process output, the functional unit (FU).
+Because the strength of object-centric process mining allows for a detailed analysis of every object, we do not base our analysis around functional units. 
+This is beneficial especially when considering irregularly occurring waste that cannot easily be distributed over the intended process output.
+Our model allows for a more fine-grained specification of the emission locations, whereas in a standard LCA, the emissions are calculated relative to only the FU.
+A problem with our approach is that making comparisons with existing LCAs that use FUs becomes difficult.
+
+
+
+As an example of this, see the $82$ unused intermediary \emph{FormedPart}s our model showed in the evaluation of the hinge production log in \cref{chap:eval-hinge-production}.
+Normally, such materials that contribute less than 1\% to the FU are not considered~\autocite{grahl}, although these rare anomalies can carry important information.
+Our method both detects and quantifies them, and can show the quantification in a visual model that makes it clear where in the process they are created.
+In this way, the use of OCPM makes the analysis transparent and manageable, since algorithms can quickly search the entire data set, unlike humans.
+
+
+
+Another strength of our method is the ease of maintenance, since the generation of the model is mostly automatic and can simply be rerun to incorporate updated data.
+The algorithm is fast, even for large logs, as our analysis of the runtime showed.
+This is normally difficult to do in a manual LCA~\autocite{ortmeier2021}, as an expert must perform the recalculation.
+Instead, once a method for getting the data is set up, updating the model with new knowledge is quick and inexpensive.
+Changes in the process are detected automatically by the object flow miner, which would otherwise require manual intervention by an expert.
+By partitioning the data based on windows of time and comparing the automatically generated models, it is easy to see evolutions and concept drift in the process.
+Doing this by hand would be time-consuming~\autocite{ortmeier2021}.
+For future work, we suggest an extension that visualizes changes in the model and in generated waste.
+
+
+
+In our object flow model, it is not generally possible to see the path that a final output has taken or an initial input will take, which could be important information for waste analysis as this can uncover its root cause.
+However, the fine-grained event log data does support such an analysis, by drilling down into the path that an object takes in the model.
+Therefore, for future work, we suggest a method to visualize the path of an object through the model.
+Until then, we suggest Event Knowledge Graphs~\autocite{fahland2022} for this purpose.
+
+
+

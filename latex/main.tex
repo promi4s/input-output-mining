@@ -1,0 +1,89 @@
+\documentclass[bachelor, parskip=half, openany]{padsthesis}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Useful LaTeX Packages and Commands %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Outsourced to preamble.sty
+\usepackage{preamble}
+\usepackage[T1]{fontenc}
+\usepackage{tabularx} % put this in your preamble
+\usepackage{array}    % For advanced column formatting
+\usepackage[table]{xcolor} % For coloring cells
+\usepackage{tikz}
+\usepackage{enumitem}
+\usepackage{enumitem}
+\usepackage[export]{adjustbox}
+\usepackage[table]{xcolor}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{pdflscape} % Rotates the page in PDF and creates a landscape environment
+\usepackage[figuresright]{rotating}
+\usepackage{makecell}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+% Define a command for the circled number
+% Change \newcommand to \DeclareRobustCommand
+\DeclareRobustCommand*\circled[1]{\tikz[baseline=(char.base)]{
+            \node[shape=circle,draw,inner sep=2pt] (char) {#1};}}
+\renewcommand{\arraystretch}{1.2}
+
+\addbibresource{references.bib}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Config %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\author{Joshua Prieth}
+\studentID{446803}
+\title{Determining Material Waste in Object-Centric Event Logs using Input and Output Mining}
+%\firstexaminer{Prof.\@ Dr.\@ Wil M.\,P. van der Aalst} % defaults to Prof. van der Aalst
+\secondexaminer{Prof.\@ Dr.\@ Sander Leemans}
+\advisor{Nina Graves}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Title and Abstract %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\maketitle
+%\cleardoublepage
+
+\frontmatter
+
+\iffalse{\input{chapters/acknowledgements.tex}}\fi
+
+\input{chapters/abstract.tex}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Content %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\mainmatter
+
+
+\iftrue{\input{chapters/introduction.tex}}\fi
+
+\iftrue{\input{chapters/prelim.tex}}\fi
+
+\iftrue{\input{chapters/related_work.tex}}\fi
+
+\iftrue{\input{chapters/method.tex}}\fi
+
+\iftrue{\input{chapters/implementation.tex}}\fi
+
+\iftrue{\input{chapters/evaluation.tex}}\fi
+
+\iftrue{\input{chapters/discussion.tex}}\fi
+
+\iftrue{\input{chapters/conclusion.tex}}\fi
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Appendix %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\iffalse{
+\appendix
+\chapter{Some additional stuff}
+Try to avoid appendices.
+If you can't, this is a place to show all kinds of results that are supportive, yet, not critical for your thesis.
+
+}\fi
+\backmatter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Bibliography %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\printbibliography
+
+We used Google Gemini for proofreading, improving grammar and readability, and generating Latex.
+In addition, parts of our code implementing our work were generated using Gemini.
+
+\end{document}

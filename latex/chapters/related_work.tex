@@ -1,0 +1,169 @@
+\chapter{Related Work}
+\label{chap:related_work}
+
+\iffalse{
+In this section, you are going to list all the related work.
+In this template, the related work section is located directly after the introduction chapter, however, this is not always the best/most logical location.
+As a general guideline, the position of the related work section can be:
+\begin{itemize}
+	\item \emph{Directly after the introduction}; Position the related work section here, in case you do not need to refer to any detailed (mathematical) concepts.
+	      Furthermore, you do not need to refer to any part of your solution.
+	      Positioning the related work section here is most commonly done if you are really uncovering \enquote{new terrain}, i.e., you are doing something \emph{very novel}.
+	\item \emph{Directly after preliminaries}; In this scenario, you swap the related work and preliminaries, i.e., w.r.t. this thesis template.
+	      Position this here when you do need to refer to some of the (mathematical) concepts (typically presented in the preliminaries), yet, you do not need to use any properties of your own solution when comparing your work to the related literature.
+	\item \emph{Directly before the Conclusion (typically after the Evaluation)}; Position the related work section here, in case you need to compare the related work against properties of your algorithm and/or the results you have obtained.
+\end{itemize}
+
+In some cases, you can introduce sub-sections in this chapter, i.e., if a division of the related work eases the readability.
+
+Note that the related work is not intended for you to \enquote{Convince your supervisors that you have studied a lot of papers}.
+Rather, you simply describe in 1, max 2 lines what the core idea of a paper is, how it relates to your work and why it is different from your work.
+In some cases, it is possible to discuss the aforementioned points for a selection of papers rather than a single paper.
+Try to present the paper along logical lines, i.e, define categories of work and introduce subsections for this.
+Never present a long 2-page list of randomly/chronologically structured work.
+Always add a decent structure!
+}\fi
+
+
+As this thesis provides a bridge between the fields of Life Cycle Assessment and process mining, we present papers from both fields.
+We first present existing approaches to automate modeling and LCI analysis in the general LCA literature.
+Subsequently, we investigate papers exploring the link between sustainability and LCA and process mining.
+As our method aims to automate LCI analysis by discovering the object flow, we also present existing discovery algorithms from the OCPM literature and show why they are not adequate for this purpose.
+
+
+\section{Automated Modeling in Life Cycle Assessment}
+
+
+
+Various LCA steps can be supported by automation.
+In this thesis, we focus on automatic modeling of the process and the LCI analysis phase, since this is where process mining can be used.
+There are not many approaches to this general problem: Haun et al.~\autocite{haun2022} state that \enquote{there are no approaches to improve LCI modelling within automated LCAs, at least not for such complex product systems such as entire vehicles with the aspiration of an accurate LCI modelling on component level}.
+While some concepts exist, the authors find that none of the publications examined in their literature review gives a detailed strategy.
+Most approaches are in civil engineering, where automatically generated models of buildings are used for LCI analysis of the construction materials used in that building~\autocite{schneider2023}.
+This modeling is applied in the design phase of a building, instead of relying on live event data like our approach.
+Another review of automation in LCA by Köck et al.~\autocite{kock2023} finds various LCA workflows in which automation is employed, from data extraction to process simulation and updating databases.
+They introduce \emph{process synthesis}, which is the automation field that is closest to automatically modeling the process.
+It describes methods in chemical engineering that use solutions of optimization problems to find more efficient means of producing chemicals~\autocite{kleinekorte2020}.
+These techniques source data from LCA databases and use the mass-balance principle, but this is run as a simulation before the process is executed, whereas our method utilizes event log data generated during the process execution.
+In fact, automated calculation of impacts and improved reporting are specifically mentioned as fields that future work can improve in the same review.
+In our approach, we automatically calculate the impact of waste and discover a process model.
+Therefore, we consider this thesis to contribute to filling this research gap.
+
+
+
+
+\section{Sustainability Analysis Using Process Mining}
+
+
+
+As previously discussed, current approaches are model-driven, leaving a gap when it comes to data-driven analysis of process executions.
+Process mining is a tool to address this gap and assist in automated LCA.
+Through expert interviews, Brehm et al.~\autocite{brehm2022} found that process mining can generally help in the field of carbon accounting, by making emissions visible and allowing the simulation of alternative processes.
+Although the literature on process mining has recognized its possibilities in the domain of sustainability, most approaches have only been high-level descriptions~\autocite{fritsch2022}.
+Multiple general issues that regular LCAs have, in particular that they are time consuming, costly, difficult to update, and only capture a snapshot of the system, can be tackled using process mining~\autocite{ortmeier2021}.
+
+
+
+
+A concrete framework for supporting an LCA through the use of process mining is Sustainability-Oriented Process Analysis (SOPA)~\autocites{klessascheck2025, klessascheck2025-2}.
+It defines a workflow of manually creating or modifying a generated process model and assigning environmental impacts to activities or process executions, which can be summed or averaged to obtain emissions, so that a single holistic sustainability indicator can be calculated.
+Through simulations, changes in the indicator that would result from process changes can be observed.
+The SOPA framework operates on classic event logs, and in the future work section, the authors suggest using OCPM.
+The idea of the framework is similar to the approach presented in this thesis, but our focus is the automatic, as-is annotated model generation, instead of needing a process expert to manually create a should-be process first.
+Particularly for waste detection, it is often useful to investigate the actual process log to find irregular and unexpected waste, instead of relying on an idealized model that does not adequately capture the unintended waste generation.
+In addition, in SOPA, impacts are assigned to activities, whereas in our model, they can also be associated with objects.
+
+
+
+
+Graves et al.~\autocite{graves2023} give a review of specifically the possibilities of using OCPM in sustainability analysis, and suggest applications in discovery, conformance checking, process analysis, and predictive process mining.
+According to the authors, many aspects of a product life cycle can be analyzed and optimized using OCPM.
+In this thesis, we focus on discovery and process analysis.
+For LCAs that study logistic processes, the material flow of objects rather than the control flow is of particular interest.
+The authors therefore suggest that it is necessary to build a model based on the inputs and outputs of each activity, which is the primary research gap we address in this thesis.
+Fritsch et al.~\autocite{fritsch2022} agree that the data flow perspective, that is, the input and output objects relevant to sustainability, is essential for LCI analysis.
+Furthermore, processes that work on different materials and do not follow a case notion are common~\autocite{fritsch2022}.
+This represents a limitation of classic process mining, where OCPM can be applied instead.
+Therefore, our focus is the development of an object-centric process discovery algorithm that analyzes the material flow, that is, which object types are inputs and outputs in activities, and also discovers inputs and outputs at the process level.
+It mines a Petri net in such a way that the inputs and outputs of each transition represent the inputs and outputs from a material flow perspective, which is identical to the object flow or data flow.
+This algorithm is then used for waste detection, which annotates this Petri net with information about waste.
+
+
+
+Various problems that arise in LCA can be improved by using process mining.
+An LCA is about a specific product of a specific organization and therefore needs to be created individually by domain experts.
+    This requires time and money~\autocite{brunner2017}.
+    Using an automated OCPM tool, the process can be streamlined and carried out more efficiently.
+
+    Similarly, due to this manual creation process, LCAs only capture a specific period of time, and changes in the environment can go unnoticed.
+    In general, LCAs struggle to react to dynamic changes~\autocite{levasseur2010}.
+    Using our automated workflow, newly gathered data can immediately be incorporated into the model to give a more accurate picture of reality.
+    The ease of splitting the data and discovering models on subsets also enables OCPM to see trends in the data over time.
+
+    LCA studies often neglect the consistency of the data, as stated by Ayres et al.~\autocite{ayres1995}.
+    In fact, the authors mention ignoring waste streams as an example where data consistency is commonly ignored, which shows why the method proposed in this thesis is useful.
+    Using our detection of implicit waste, waste streams that are ignored can be quantified.
+
+    Because an LCA works with simplified calculations, problems can arise if it is applied to a large operation, such as an entire production plant.
+    This makes abstractions necessary, and information about fine-grained events is lost.
+    Because OCPM has the algorithmic ability to handle each event on an individual level, it is better suited than classic LCA to handle such data.
+    Using objects and thus being able to precisely track each object's life cycle eliminates the need to calculate all impacts relative to a single output.
+    In addition, the algorithms are designed to work on large amounts of real, fine-grained data, and thereby do not require abstracting away steps to make the calculations feasible by hand.
+
+
+
+A challenge in applying process mining to LCA is that the underlying data must provide sufficient details about sustainability, which is rare~\autocite{schafer2024}.
+Consequently, LCA databases are often used to populate the model, but these contain reference values instead of real values.
+According to Schäfer et al.~\autocite{schafer2024}, while extracting emission data from existing ERP systems is difficult, the necessary data to perform waste analysis does exist in current data sets already.
+For this reason, we believe that the application of process mining to waste detection is a reasonable focus for this thesis.
+In particular, objects that are explicitly marked as waste and objects that exist unintentionally are the two types of waste mentioned.
+Both types can be discovered by the method we present in this thesis.
+
+
+
+\section{Object-Centric Process Discovery}
+
+
+
+In this section, we present object-centric discovery algorithms and models to explain why a novel algorithm and model are needed for the object flow.
+We do not review mining techniques for classic event logs, since our method is fundamentally based on exploiting the existence of individual objects and does not require a fixed case identifier.
+
+
+
+As discussed in the motivation in \cref{sec:intro_ssec:motiv}, the object-centric Petri nets created from the object-centric inductive miner do not satisfy our requirements.
+An object-centric miner that discovers an Object-Centric Process Tree is the DF$^2$ miner~\autocite{vandetten2024}.
+The resulting object-centric process tree shows the object types related to an activity, but does not show cardinalities of the object types or transformations of objects through activities.
+Due to the tree structure, two nodes at different heights can follow each other in the control flow perspective, which also makes object-centric process trees unsuitable for showing the material flow.
+A strength of the algorithm is that for every object-centric process tree, a live and identifier-sound object-centric Petri net is created.
+
+
+
+Another approach is Object-Centric Dynamic Condition Response Graphs~\autocite{christfort2024}.
+These are graphs in which activities are nodes.
+The model is then composed of subgraphs that represent the life cycles of objects of an object type, which overlap with activities that the object is related to.
+Between activities, there can be a conditional, response, and excluding relationship.
+Therefore, these models are based on the relations between activities, which are different from material flow that shows transformations of objects.
+The subgraph notation for object types is not suitable for showing a material transformation due to limited overlap possibilities.
+
+
+
+A model that clearly shows the related object types and cardinalities is an Object-Centric Behavioral Constraint Model~\autocite{li2017}.
+These contain activities and object types.
+Between activities, there are constraints based on time.
+Between activities and object types, as well as between a pair of object types, there can be cardinalities.
+Again, these models are based on constraints, instead of transformations of the material flow.
+Furthermore, their purpose is validation, instead of discovering irregularities such as waste in the data.
+
+
+
+In summary, none of the existing approaches concisely shows the object flow, especially the inputs and outputs of each activity, in a clear and intuitive manner.
+We use Petri nets instead, similar to ecological researchers who have been using Petri nets for sustainability analysis for 30 years~\autocite{moller1995}.
+These provide an intuitive way of combining objects with events, and the input and output places can be used to show the object types involved in a transformation, together with weighted or variable arcs for cardinalities.
+
+
+
+One model that does show the material flow is Event Knowledge Graphs~\autocite{fahland2022}, although on the instance level.
+These graphs visualize the flow of each object, not the object type, through a graph of events.
+Therefore, these do not serve our purpose of providing a process model, but they can be used to inspect individual objects; for instance, if an object type has been detected as waste in our model, the flow of its instances through the process can be analyzed.
+
+\enlargethispage{2\baselineskip}

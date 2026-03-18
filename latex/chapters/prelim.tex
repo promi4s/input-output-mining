@@ -1,0 +1,400 @@
+\chapter{Preliminaries}
+\label{chap:prelim}
+    
+    
+    \iffalse{
+    In the preliminaries you present well-understood mathematical concepts that you need in your thesis.
+    For example, you can define the natural numbers as $\N\coloneqq\Set{1,2,\dots}$, and, correspondingly $\N_0\coloneqq\N\cup\Set{0}$.
+    A preliminary notion is either a well-defined commonly understood mathematical notion, e.g., sets, multisets, graphs, sequences, Petri nets, \dots, or, it is a concept clearly defined in another paper, i.e., you just adopt the notation (or a slight variation thereof).
+    \emph{Any concept you use should be defined in your thesis}.
+    You should never write: \enquote{We use Workflow nets, a definition of these can be found here [X]}.
+    If you use it, explain it.
+    
+    Concepts that are unique to your approach are not part of the preliminaries, i.e., they are described in the approach section itself.
+    
+    Some useful tips:
+    \begin{itemize}
+    	\item When introducing a complex concept, use the following structure (always works):
+    	      \begin{itemize}
+    		      \item Explain the concept informally.
+    		      \item Provide a formal definition of the concept.
+    		      \item Provide an example, using the formal definition, of the concept.
+    	      \end{itemize}
+    	      In your examples, try to be \emph{as visual as you can}, often, an image says more than 5 pages of text.
+    	\item use commands, some of which are already provided in the preamble, e.g.,\\
+    	\verb+\newcommand*{\N}{\mathbb{N}}+
+    \end{itemize}
+    
+    }\fi
+    
+    
+    
+    
+    In this chapter, we give the mathematical concepts used in this thesis, and in addition explain the concepts Life Cycle Assessment, Material Flow Analysis, and object-centric process mining.
+    We first introduce the mathematical foundations.
+    As our work aims to support LCA, we present LCA second, followed by MFA.
+    Subsequently, we define the OCPM essentials that we use, including the event log format and Petri nets, which are both slightly modified for our purposes in this thesis.
+    
+    
+    
+    \section{Mathematical Foundations}
+    
+    
+    We use the usual notation for sets, such as union $\cup$, subsets $\subseteq$, and equality $=$.
+    We also use functions $f: X \to Y$ that map $x \in X$ to $f(x) \in Y$.
+    We extend partial functions to total functions by mapping inputs that are not in the domain to $\bot$ for a simpler notation.
+    Tuples $(a, b, c) \in \{a, b, c\}^3$ provide a fixed number of values in order. 
+    To obtain the element at index $i$ from a tuple $t$, the notation $\pi_i(t)$ is used. 
+    
+    
+    Given a set $S$, a multiset is a function $M: S \to \mathbb{N}$, where each element can occur multiple times, which we call the multiplicity.
+    We denote them in brackets with the multiplicity of each element in superscript, such as $M = [a^1, b^2, c^3]$.
+    The set of possible multisets of a set $S$, which differ in multiplicity of the elements, is $\mathcal{B}(S)$.
+    In this example, $M \in \mathcal{B}(\{a, b, c\})$.
+    The multiplicity of an element $x \in M$ is obtained through the multiplicity function $m_M(b) = 2$.
+    To obtain the support set of a multiset, we use $supp(M) = \{m \mid m \in M\}$, so, for example $supp(M) = \{a, b, c\}$.
+    The additive union of two multisets adds the multiplicities of the elements, as in $M \uplus M = [a^2, b^4, c^6]$.
+    Equality $M = N$ holds if the multiplicity of each element is equal in both $M$ and $N$.
+    The absolute value $|M|$ of a multiset is the sum of the multiplicities of all elements.
+
+    
+    We also define a strict total order as a binary relation that is irreflexive, asymmetric, transitive and connected.
+    An equivalence relation is a binary relation that is reflexive, transitive, and symmetric.
+    It partitions the universe into equivalence classes, of which any element can function as the representative.
+    
+    
+    
+    \section{Life Cycle Assessment}
+    \label{chap:prelim-life-cycle-assessment}
+    
+    
+    A Life Cycle Assessment (LCA) is a study on any specific product with respect to its environmental impacts, beginning with the extraction of the resources it requires, its manufacture, use and disposal, as well as all logistical operations necessary for these steps~\autocite{bjorn2018}.
+The goal is to gain an understanding of the holistic process and its environmental impact, which is then used to identify opportunities for improvement~\autocite{graves2025}.
+The life cycle approach is essential for sustainability~\autocite{graves2025}, and LCAs are commonly used and supported by commercial software~\autocite{schneider2023}.
+    Because of this holistic view, LCA is also called cradle-to-grave analysis.    
+    A restricted form can also be applied, for instance, to a gate-to-gate analysis, where \emph{gate} refers to the entrance or exit of a factory, since tracking the prerequisites and use of a product can be difficult.
+    The measured environmental impact can be of a diverse nature, such as natural resources, human health, and ecological consequences~\autocite{huijbregts2017}.
+
+    
+    The well-known carbon footprint is an example of an LCA study in which the environmental impact measured is global warming potential~\autocite{viere2019}.
+    The newly acquired information on environmental impacts can be used to improve the impact, inform decision makers, or promote eco-friendliness to customers~\autocite{iso14040}.
+    In the context of LCA, waste is defined as \enquote{substances or objects which the holder intends or is required to dispose of}~\autocite{iso14040}, which is the understanding of waste that we use throughout this thesis.
+    
+    
+    
+    The principles of LCA were standardized in 2006 by the \emph{International Organization for Standardization} in ISO14040~\autocite{iso14040}, which specifies the main principles, and ISO14044~\autocite{iso14044}, which details the guidelines for applying LCA.
+    Since then, it has become one of the most important methods for measuring environmental impacts, and is widely applied~\autocite{kock2023}.
+    We summarize what is necessary from the standard for this thesis.
+    According to the ISO standard, an LCA consists of the following four phases:
+    \begin{enumerate}
+        \item In the \textbf{Goal and Scope Definition}, the intended application, motivation, and target audience of the study are given.
+        The assumptions taken, data requirements, and limitations are presented as well.
+        In addition, the system to be studied, including its boundary and function, and the environmental impacts of interest are defined.
+        \item Afterwards, in the \textbf{Life Cycle Inventory Analysis} (LCI analysis), the data necessary for the assessment is collected, validated, and aggregated.
+        This includes the inflows and outflows of the system of different types, such as resources, goods, products, waste and emissions.
+        After this step, all inputs and outputs of the process are known.
+        The LCI analysis is the most time-consuming step and its outcome depends on the quality of available data~\autocite{kock2023}.
+        \item Subsequently, in the \textbf{Life Cycle Impact Assessment}, the results of the LCI analysis are assigned to some chosen impacts, which are used to calculate a number that quantifies them.
+        \item Then, in the \textbf{Life Cycle Interpretation}, an evaluation of the previous process is performed.
+        This considers completeness, limitations and identification of significant issues.
+    \end{enumerate}
+    In the standard, a concrete list of methods specifying how to perform LCA is intentionally not given, as it is supposed to be open and widely applicable in different scenarios, even for new approaches~\autocite{iso14040}, for which process mining is an example.
+
+
+
+To simplify computations and comparisons, an LCA calculates impacts with respect to a single unit of the process output, the functional unit (FU).
+This is done for simplification purposes, and allows one to see the impact contribution of an intermediate product to the final product.
+However, a process can be too complex to be broken down in relation to a single FU, especially processes as large as a whole life cycle.
+If there are multiple or varying outputs, for instance, if waste is produced throughout the process or if a production process gives two distinct products, the attribution of emissions to a single FU is not always obvious~\autocite{grahl}.
+
+
+
+Due to the complex nature of many life cycles, processes that contribute less than 1\% to the impacts are often excluded from consideration~\autocite{grahl}.
+The actual environmental impact of actions is often not measured, and instead existing LCA databases are used that provide common values for emissions based on industry and location~\autocite{schafer2024}.
+As a result, an LCA can have inaccuracies in its calculated impacts.
+For these reasons, an LCA can be considered as giving a \enquote{best estimate} of the average impacts of the process~\autocite{bjorn2018}.
+
+
+    
+    \subsection{Example}
+    
+    Suppose that biofuel, fuel made by converting biomass~\autocite{ipcc2014}, should be used as an energy source for cars.
+    Without in-depth consideration, with regard to the ecological impact, this fuel appears to be a much better source of energy than natural gas, because all carbon dioxide emitted by burning the biofuel has already been absorbed by the plant matter before, and therefore it does not represent an addition of CO\textsubscript{2} to the atmosphere.
+    The life cycle of the fuel is visualized in \autoref{fig:biofuel-life-cycle}.
+    
+    
+    
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=\textwidth]{figures/biofuel-life-cycle.png}
+        \caption{Life cycle perspective of biofuel production, taken from \autocite{bjorn2018}.}
+        \label{fig:biofuel-life-cycle}
+    \end{figure}
+    
+    
+    However, by performing an LCA the issue becomes clear.
+    For that, we set the system boundary as a cradle-to-grave process, from the cultivation of the crops to the disposal by burning the biofuel in a consumer car.
+    The goal is to find out whether biofuels are actually \enquote{climate neutral}, so greenhouse gas emissions are chosen as the impact of interest.
+    We perform the LCI analysis for some quantity biofuel as the FU.
+    The inventory includes energy inputs, and we see that the harvest and transport of the biomass, like crops, requires energy.
+    The biomass then has to be converted to biofuel, which also requires energy, and afterward the biofuel has to be distributed before being burned and emitting CO\textsubscript{2} into the atmosphere.
+    Suppose that in our example, these processes use fossil fuels, for example the distribution to a gas station.
+    In the life cycle impact assessment phase, we assign the emissions resulting from the energy consumed by the production and transportation steps to the FU, the biofuel.
+    During the life cycle interpretation, after calculating the total energy input and because biomass extraction cannot power itself, it becomes clear that due to the production process, the biofuel is not climate neutral~\autocite{bjorn2018}, and for every burned liter of biofuel that came from biomass that bound CO\textsubscript{2} from the atmosphere, there are significant additional emissions coming from fossil fuels that were not previously in the atmosphere.
+    
+    
+    
+    \section{Material Flow Analysis}
+    
+    
+    
+    Since this thesis is focused on the LCI analysis phase, because that is where the underlying data is used to find the quantities of inputs and outputs of the process~\autocite{grahl}, we discuss it in more detail now.
+    In addition to LCA, another environmental analysis framework called \emph{Material Flow Analysis} (MFA) is often used in practice to perform the LCI analysis phase~\autocite{brunner2017}.
+    In an MFA, a model of the inflows and outflows, and of the inner material flow of the system is built, and each material is quantified by some metric, such as weight or volume~\autocite{brunner2017}.
+    Thus, by performing an MFA, one obtains a detailed model of the process supported by quantitative data.
+    This model serves the LCI analysis.
+    
+
+    
+    Like an LCA, an MFA requires a system boundary.
+    Within the system boundary, materials are transported, transformed, or stored.
+    These materials can be of a diverse nature, such as chemical substances, economic goods, electricity, and emitted gas.
+    The flow of the materials in the process is investigated and put into relation with each other.
+    This creates a model of material flows between stocks of those materials~\autocite{brunner2017}.
+    
+    
+    
+    The power of an MFA derives from the mass-balance principle, which states that the sum of the mass flowing inside the system must equal the sum of the mass flowing outside.
+    If that principle holds in the empirical data, this ensures that the model of the process is consistent.
+    This is critical for LCI analysis, as otherwise the subsequent impact assessment is done on faulty data.
+    It is also possible to determine the input and output flows exactly, for instance the amount of waste material that leaves the system~\autocite{brunner2017}.
+    
+    
+    
+    \subsection{Example}
+    
+    
+    The chemical element phosphorus is essential for modern life, but is also harvested from a finite and non-renewable supply of minerals that could be exhausted in 60 to 100 years~\autocite{steen1998}.
+    This makes the role of phosphorus particularly interesting to analyze because savings can have a great effect on future generations.
+    
+    
+    So, we consider the usage of phosphorus as our system, with only the direct mass of phosphorus to be considered.
+    We set the system boundary to the entire world, which on the one hand of course comes with some practical issues, but on the other hand brings so much abstraction that the MFA is easy to understand.
+    For our exemplary purposes, the data is given by \autocite{steen1998} as percentages.
+    Using them for a primitive MFA, we get \autoref{fig:phosphorus}, which shows that 80\% of all mined phosphorus is dedicated to agriculture, and only 8\% to private households.
+    The numbers are given in $\frac{\text{kg}}{\text{capita } \cdot \text{ year}}$.
+    Note that the sum of the masses leaving the system boundary is equal to the mass entering, so the mass balance principle is fulfilled.
+
+
+    In terms of LCI analysis, we see that the process inputs are $5 \frac{\text{kg}}{\text{capita } \cdot \text{ year}}$, and $4 \frac{\text{kg}}{\text{capita } \cdot \text{ year}}$, $0.6 \frac{\text{kg}}{\text{capita } \cdot \text{ year}}$ and $0.4 \frac{\text{kg}}{\text{capita } \cdot \text{ year}}$ are the outputs.
+    
+    
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=\textwidth]{figures/phosphorus.png}
+        \caption{MFA of global phosphorus use, taken from \autocite{brunner2017}.}
+        \label{fig:phosphorus}
+    \end{figure}
+    
+\iffalse{
+
+    This tells us that the vast majority of phosphorus is actually not consumed by private households.
+    However, this level of abstraction is too high to see that even the agricultural portion is dedicated to household food consumption, especially in richer countries where meat and dairy form a larger portion of food consumption, which require 3 to 6 times as much phosphorus as the cultivation of cereals~\autocite{steen1998}.
+    This is not portrayed by this purely numerical model and shows why human interpretation, which would come in the later LCA steps, is also a necessary component.
+
+}\fi    
+    
+    
+    \section{Object-Centric Process Mining}
+    
+    
+    Process mining is a data-driven and bottom-up set of techniques in Business Process Analysis for analyzing processes based on event logs, which document relevant business events.
+    There are various methods, including process discovery, where a model of the underlying process is automatically created, conformance checking, which checks how well a given model fits the data, performance analysis of a process execution, and mining of organizational structures~\autocite{van2016}.
+    In this thesis, we work on process discovery.
+    Process discovery tools are useful because in the real world, there are often discrepancies between what the desired model looks like, for example the production process in a company, and what actually happens in reality, so simply creating a to-be model is not sufficient.
+    By analyzing the process models found based on the empirical data, understanding of the process is deepened, deviations can be identified, and the process can be improved.
+    Process mining therefore provides a framework for dealing with real-world processes algorithmically.
+    While classic process mining works on event logs where each event belongs to exactly one execution of the process, this notion has recently been extended to object-centric event logs, which relate events with a number of objects, and these objects can be related to other events as well.
+    This extension possesses the ability to represent data from any modern information system~\autocite{van2020}.
+    The ecosystem around OCELs is Object-Centric Process Mining (OCPM).
+    
+    
+    
+    \subsection{Object-Centric Event Logs} 
+    \label{chap:my-ocel-definition}
+    
+    
+    
+    Object-Centric Event Logs (OCELs) are the backbone of OCPM, since they supply the data on which the algorithms work.
+    In OCELs, an event is not necessarily related to a single case as in classical process mining, and indeed there is no case notion.
+    Instead, an event can be related to any number of objects and an object can be related to any number of events, and both relations can have qualifiers describing them in more detail.
+    Both events and objects are of specific types and are further characterized by attributes with arbitrary values.
+    
+    
+    Let us first define the components that the OCEL uses~\autocite{ocel20}:
+    
+    \begin{definition}[Universes]
+    Let $\mathbb{U}_\Sigma$ be the universe of strings. We define the following pairwise disjoint universes:
+    \begin{itemize}
+        \item $\mathbb{U}_{ev} \subseteq \mathbb{U}_\Sigma$ is the universe of events.
+        \item $\mathbb{U}_{etype} \subseteq \mathbb{U}_\Sigma$ is the universe of event types (i.e., activities).
+        \item $\mathbb{U}_{obj} \subseteq \mathbb{U}_\Sigma$ is the universe of objects.
+        \item $\mathbb{U}_{otype} \subseteq \mathbb{U}_\Sigma$ is the universe of object types.
+        \item $\mathbb{U}_{attr} \subseteq \mathbb{U}_\Sigma$ is the universe of attribute names.
+        \item $\mathbb{U}_{val}$ is the universe of attribute values.
+        \item $\mathbb{U}_{time}$ is the universe of timestamps (with $0 \in \mathbb{U}_{time}$ as the smallest element and $\infty \in \mathbb{U}_{time}$ as the largest element).
+    \end{itemize}
+    \end{definition}
+    
+    
+    In this thesis, we use a modified definition of OCEL~2.0 event logs with multiple modifications: qualifiers are not used, there is a total order of events, and object attribute changes do not occur.
+    Qualifiers are omitted because our algorithm simply needs any relation to exist, so the definitions are simplified if there is at most one element in the relation.
+    The algorithm also compares timestamps between events, so if two different events have the same timestamp, it is not trivial which event should be considered first.
+    Therefore, we require a total order of events.
+    We also assume that there are no object attribute changes.
+    As our algorithm uses object attributes, additional complexity would be introduced by the decision of which attribute is valid at which time.
+    To make a log satisfy this assumption, object attribute changes shall be replaced by creating a new object when an attribute changes.
+    We specify our modified OCELs, based on the original definition~\autocite{ocel20}:
+    
+    
+    \begin{definition}[Modified OCEL]
+        A modified Object-Centric Event Log is a tuple \[
+    L = (E, O, EA, OA, evtype, \allowbreak time, objtype, \allowbreak eatype, oatype, eaval, \allowbreak oaval, E2O)
+    \] with
+    \begin{itemize}
+        \item $E \subseteq \mathbb{U}_{ev}$ is the set of events.
+        \item $O \subseteq \mathbb{U}_{obj}$ is the set of objects.
+        \item $evtype : E \to \mathbb{U}_{etype}$ assigns types to events.
+        \item $time: E \to \mathbb{U}_{time}$ assigns timestamps to events.
+        \item $EA \subseteq \mathbb{U}_{attr}$ is the set of event attributes.
+        \item $eatype : EA \to \mathbb{U}_{etype}$ assigns event types to event attributes.
+        \item $eaval : (E \times EA) \not\to \mathbb{U}_{val}$ assigns values to event attributes (not all attributes are mapped for each event).
+        \item $objtype : O \to \mathbb{U}_{otype}$ assigns types to objects.
+        \item $OA \subseteq \mathbb{U}_{attr}$ is the set of object attributes.
+        \item $oatype : OA \to \mathbb{U}_{otype}$ assigns object types to object attributes.
+        \item $oaval : (O \times OA) \not\to \mathbb{U}_{val}$ assigns values to object attributes.
+        \item $E2O \subseteq E \times O$ are the event-to-object relations, without qualifiers.
+    \end{itemize}
+    such that
+    \begin{itemize}
+        \item
+        $\text{dom}(eaval) \subseteq \{(e, ea) \in E \times EA \mid evtype(e) = eatype(ea)\}$ to ensure that only existing event attributes can have values.
+        
+        \item
+        $\text{dom}(oaval) \subseteq \{(o, oa) \in O \times OA\mid objtype(o) = oatype(oa)\}$ to ensure that only existing object attributes can have values.
+    
+        \item
+        For the events $e \in E$, the $time(e)$ form a total order.
+        We then also say that there is an order between $e \in E$ and $e' \in E$, determined by their timestamps.
+    \end{itemize}
+    \end{definition}
+    
+    
+    We also use the following notation from the specification of OCELs~\autocite{ocel20}:
+    \begin{itemize}
+        \item 
+        $ET(L) = \{ evtype(e)\ |\ e \in E \}$ is the set of event types.
+    
+        \item
+        $OT(L) = \{objtype(o)\ |\ o \in O\}$ is the set of object types.
+    
+    
+            \item 
+            $oaval_{oa}(o) = oaval(o, oa)$ provides the object attribute $oa$ of $o$.
+    \end{itemize}
+
+    Since there is a total order of events, we introduce two functions that provide the previous and the next event that an object is related to.
+    \begin{definition}[Previous and next event]
+        Let $(e, o) \in E2O$.
+        Let $prev: O \times E \not\to E$ be the event related to $o$ that occurs directly before $e$, if it exists.
+        Let $next: O \times E \not\to E$ be the event related to $o$ that occurs directly after $e$, if it exists.
+    \end{definition}
+    
+    
+    
+    \subsection{Example}
+    \label{chap:running-example}
+    
+    
+    
+    We use the plastic production from our motivation in \cref{sec:intro_ssec:motiv} here and as the running example in our method.
+    To represent the total order of events based on timestamp, we assume that the rows in the \autoref{table:running-example-table-events} are sorted by ascending timestamps.
+    In the object table \autoref{table:running-example-table-objects}, each object identified by ID in the first column shows its object type in the second column, and a custom attribute $mass$ that takes an integer that stores the weight of the object.
+    \emph{Mold} objects do not have a known $mass$ attribute, as they are purely inside the reaction vessel and cannot be measured like the other objects that enter or leave the system.
+    There are no $O2O$-relations.
+
+
+    In our running example, there are two main process executions, from \emph{Inject} to \emph{Pack}.
+    In the first, \emph{Degas} is executed, while this is not the case in the second execution.
+    Additionally, in the first execution \emph{Trim} is only executed once and only a single waste object is created, while there are three such events in the second execution.
+    Moreover, the first \emph{Pack}, namely \texttt{pack\_3}, only uses the mold created from the first execution to create a \emph{Product}, while the second \emph{Pack}, \texttt{pack\_4}, combines that product with the mold from the second execution into another \emph{Product}.
+    This entanglement of the process executions is also why an object-centric log is necessary here.
+
+
+    The mass serves as an example for the annotation of waste that we present later in this thesis, and is not relevant for the discovery of the process model.
+    
+
+    
+    \section{Petri Nets}
+
+
+    
+    A common process model is a Petri net.
+    A Petri net is a graph that consists of two types of nodes, places and transitions.
+    They keep tokens in places and move them using transitions.
+    The edges indicate which places and transitions are connected, where every edge outgoing from a place must lead to a transition, and every outgoing edge from a transition must lead to a place.
+    When a transition fires, it moves a token from each input place to each output place.
+
+
+
+    We use labeled Petri nets with and without weighted arcs.
+    We define Petri nets with weighted arcs as follows~\autocite{carmona2010}:
+    \begin{definition}[Petri net with weighted arcs]
+        A \emph{labeled Petri net with weighted arcs} is a tuple $N = (P, T, W, l)$ where $P$ is the finite set of places, $T$ is the finite set of transitions, and $W: (P \times T) \cup (T \times P) \to \mathbb{N}$ is the weighted flow relation.
+        Let $W(p, t) = 0$, or $W(t, p) = 0$, if the arc from $p$ to $t$ or $t$ to $p$, respectively, does not exist.
+        $l: T \not \to \mathbb{U}_{act}$ is a labeling partial function, where transitions that are not mapped are silent transitions.
+    \end{definition}
+
+    To represent the tokens in the places, we use markings:
+    \begin{definition}[Marking]
+        A \emph{Marking} of a labeled Petri net with weighted arcs is a multiset of places $M \in \mathcal{B}(P)$.
+        $M[p]$ is the number of tokens in $p \in P$.
+    \end{definition}
+
+
+
+    To fire a transition $t \in T$ given a marking $M$, it must be enabled, which is the case if each input place $p$ with $W(p, t) > 0$ contains at least as many tokens as the arc weight requires, or for all $p \in P$ it is $M[p] \geq W(p, t)$.
+    Firing it results in the updated marking $M'[p] = M[p] - W(p, t) + W(t, p)$ for each $p \in P$, where input tokens are consumed and output tokens are produced according to the weights.
+
+
+    A variable arc can consume or produce an arbitrary number of tokens, but at least one.
+    Petri nets with such arcs are defined as follows:
+    \begin{definition}[Petri net with variable arcs]
+        A \emph{labeled Petri net with variable arcs} is a tuple $N = (P, T, F, V, l)$ where $P$ is the finite set of places, $T$ is the finite set of transitions, and $F, V \subseteq (P \times T) \cup (T \times P)$ define the regular and variable arcs such that $F \cap V = \varnothing$.
+        $l: T \not \to \mathbb{U}_{act}$ is a labeling partial function, where transitions that are not mapped are silent transitions.
+    \end{definition}
+
+    In these nets, given a marking $M$, a transition $t \in T$ is enabled if $M[p] \geq 1$ for each $p \in P$ with $(p, t) \in F \cup V$. 
+    When $t$ fires, the marking in place $p \in P$ is updated as $M'[p] = M[p] - \hat{c} + \hat{p}$, where $\hat{c}$ and $\hat{p}$ are given by the following cases:
+
+\paragraph{Non-variable arcs.}
+If $(p, t) \in F$, then $\hat{c} = 1$, and if $(t, p) \in F$ then $\hat{p} = 1$.
+
+\paragraph{Variable arcs.}
+If $(p, t) \in V$, then $\hat{c}$ is chosen from $1$ to $M[p]$, and if $(t, p) \in V$ then $\hat{p} \geq 1$ is chosen.
+
+\paragraph{No arcs.}
+If there is no arc, that is $(p, t) \not \in F \cup V$, then $\hat{c} = 0$, and similarly $\hat{p} = 0$ if $(t, p) \not \in F \cup V$.
+
+
+    
+    \section{Resources and Handling Units}
+    \label{chap:resources-hus}
+    
+    OCELs aim to holistically capture a company process.
+    As part of these processes, we differentiate between objects that act as resources or handling units.
+    On the one hand, a resource is an object that describes what an event works \textit{with}, while it is not directly the target.
+    On the other hand, a handling unit describes what the event operates \textit{on}~\autocite{hensen2024}.
+    Assume that we added objects for the machines that performed the actions in our running example, such as \emph{Trimmer} that performs the \emph{Trim} activity.
+    As one \emph{Trimmer} performs many \emph{Trim} events, it represents a resource that works on the handling units \emph{Mold} and \emph{Waste}.
+    A linear programming approach can be used to separate object types into multiple levels, where types on a level act as a resource for lower levels but are handling units for higher levels\autocite{blinded2025}.

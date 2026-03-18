@@ -1,0 +1,882 @@
+\chapter{Method}
+\label{chap:method}
+
+
+In this chapter, we detail the object flow miner.
+We first formally define the model that is obtained by the object flow miner, which is an object flow net that shows the object flow and inputs and outputs of each activity.
+In particular, each transition in the discovered object flow net corresponds to a quantified combination of input and output object types in the event log.
+The algorithm depends on role functions, which we define next.
+We then provide the steps of the algorithm.
+For our original goal of waste detection, we give a method to extend the obtained model with information about waste.
+For that purpose, we analyze the types of waste in an OCEL.
+Thus, on a high level, we want to use an OCEL to discover a process model based on inputs and outputs, with annotations for waste.
+Our algorithm mines this model under the assumption that the input and output in each individual event is already known.
+As this is not necessarily given in the OCEL, we refer to our implementation in \cref{chap:impl} for how this can be discovered automatically.
+
+
+
+The entire method is shown schematically in \autoref{fig:method-flowchart}.
+The inputs are the OCEL in purple and the role functions in yellow, and the outputs are different kinds of object flow nets in green.
+These notions are specified in subsequent sections.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/method-flowchart.png}
+    \caption{The workflow of our method. Created with Whimsical (\url{https://whimsical.com}).}
+    \label{fig:method-flowchart}
+\end{figure}
+
+
+
+\section{Object Flow Nets}
+
+
+
+For this thesis, we introduce a special class of Petri nets, called \emph{Object Flow Nets} (OFNs).
+These are Petri nets where each place is associated with an object type.
+In contrast to OCPNs, in which each marking consists of object identifiers~\autocite{van2020}, OFNs use regular, non-identifiable tokens.
+
+
+
+In an OFN, the incoming and outgoing arcs of a transition specify the exact number of tokens consumed or produced, as long as weighted arcs are used.
+For a fixed object type, it is guaranteed that there are at most two input or output places of that type each.
+This allows one to directly read how many objects of which object types are consumed or produced by a transition.
+Otherwise, to abstract from the exact number, variable arcs can be used, that differentiate only between one or many objects.
+Therefore, an OFN visualizes object flow, where each input and output of a transition occurring in the log is clearly specified.
+
+
+
+We use two types of OFNs.
+First, with weighted arcs, where a specific number of tokens is consumed or produced when a transition is fired.
+Second, we introduce OFNs with variable arcs.
+Variable arcs in OFNs do not correspond exactly to variable arcs in OCPNs, since in OFNs they consume or produce at least one token, while in OCPNs they can also consume or produce none.
+
+
+
+In both types, places have one of three roles.
+\emph{Initial} places do not have any incoming arcs, \emph{final} places do not have any outgoing arcs, and places which have both incoming and outgoing arcs are \emph{regular}.
+This is important for the context of process inputs and outputs, so that, for example, the raw materials in an LCA can be modeled as initial places.
+
+
+
+Formally, this gives us the following two definitions:
+
+\begin{definition}[Object Flow Net with weighted arcs]
+    An \emph{Object Flow Net with weighted arcs} is a tuple $OFN = (N, pt, role)$, where $N = (P, T, W, l)$ is a labeled Petri net with weighted arcs, $pt: P \to OT$ assigns object types to places, and $role: P \to \{regular, initial, final\}$ maps places to their role.
+\end{definition}
+
+\begin{definition}[Object Flow Net with variable arcs]
+    An \emph{Object Flow Net with variable arcs} is a tuple $OFN = (N, V, pt, role)$, where $N = (P, T, F, V, l)$ is a labeled Petri net with variable arcs, $pt: P \to OT$ assigns object types to places, and $role: P \to \{regular, initial, final\}$ maps places to their role.
+\end{definition}
+
+
+
+Semantically, the firing rules for OFNs are identical to those of the Petri nets they are based on.
+
+
+
+    An OFN is fully defined by a graphical notation, see for example \autoref{fig:motivation-inputoutputminer} in the motivation in \cref{sec:intro_ssec:motiv}.
+    The places and transitions are as in Petri nets, including a label $\tau$ for silent transitions.
+    The object type for each place is given by a color.
+    The initial places have an octagon shape, and the final places are double-bordered octagons.
+    Regular places are ellipses.
+    
+
+
+\section{Role Functions}
+
+
+
+The role functions $role_{in}$ and $role_{out}$ for a given OCEL describe the \emph{role} of each object in the OCEL's events.
+The role is input, output, initial input, final output, or none.
+\emph{Initial inputs} and \emph{final outputs} refer to inputs or outputs of the entire process.
+In LCA terms, they are crossing the system boundary.
+
+
+
+While technically an initial input is still an input, for the purposes of the algorithm we differentiate between the two, so that no object can be both in the same event.
+The same holds for outputs and final outputs.
+This allows us to define the consistency of the role functions.
+An initial input $o$ of an event must be truly initial and, therefore, never occur in the log before that event, and similarly, a final output $o$ must never again occur in the log.
+In addition, for an input $o$ a previous event where that $o$ was an output must exist, and for an output $o$, a next event where $o$ is an input must exist.
+This is formalized as follows.
+\begin{definition}[Role functions]
+    For each event and related object $(e, o) \in E2O$, the role of $o$ in $e$ is given by the two \emph{role functions}
+    \begin{align*}
+        role_{in}&: E \times O \rightarrow \{in, init, \bot\} \\
+        role_{out}&: E \times O \rightarrow \{out, final, \bot\} \\
+    \end{align*}
+
+    $init$ and $final$ have to be consistent, that is,
+    for each $e \in E, o\in O$ with $role_{in}(e, o) = init$ there is no previous event $e' < e$ such that $role_{out}(e', o) \not = \bot$ or $role_{in}(e', o) \not = \bot$. 
+    Similarly, for each $role_{out}(e, o) = final$ there is no next event $e' > e$ with the same condition.
+
+    If $role_{out}(e, o) = out$, there must be a next event $e' > e$ with $role_{in}(e', o) = in$, and also if $role_{in}(e, o) = in$, there must be a previous $e' < e$ with $role_{out}(e, o) = out$.
+    \iffalse{
+        If $(e, o) \in E2O$ with $role_{in}(e, o) = in$, then there must exist a previous event $e' < e$ such that $(e', o) \in E2O$, and
+    if $(e, o) \in E2O$ with $role_{out}(e, o) = out$, then there is a next event $e' > e$ such that $(e', o) \in E2O$.
+    If $(e, o) \not \in E2O$ for some $e \in E$ and $o \in O$, then $role_{in}(e, o) = role_{out}(e, o) = \bot$.
+
+    }\fi
+\end{definition}
+
+
+
+
+\section{Object Flow Miner}
+
+
+
+The object flow miner works in six steps, which are also shown in the visualization of our method in \autoref{fig:method-flowchart}.
+As an input, it takes an OCEL and role functions for that OCEL.
+As an output, it gives an OFN.
+This OFN is mined by first aggregating events to the activity and object type level by combining events that have inputs and outputs of the same object type.
+After this step, the different combinations, or \emph{configurations} of object types in inputs and outputs in an activity are known.
+These configurations have a different effect on the object flow, which is why distinguishing them is key to discovering the object flow.
+Then, the model is built.
+For each input and output of a configuration a place candidate is created in the second step.
+Third, self-loops that implicitly exist in the configurations but are not adequately represented by referring to a single, looping place candidate are handled by creating these looping places.
+Fourth, identical places are combined.
+Fifth, places from different configurations are combined by analyzing which places fulfill similar functions.
+Sixth, missing transitions are created.
+Finally, an OFN with either weighted or variable arcs is created.
+Furthermore, we describe how to filter infrequent behavior during step one, which requires filter parameters as additional input to the object flow miner.
+
+
+
+To achieve our goal of waste detection, we then provide a method of annotating the resulting model with information about waste, giving a waste-annotated OFN.
+For that, we differentiate between system-wide, object type, explicit, and implicit waste.
+
+
+
+The existence of the role functions for the first step is a strong assumption that is made to allow using different methods for this step.
+For example, assume that an OCEL has qualifiers on relations that immediately define whether an object is an input or output.
+This can be directly translated into a role function.
+If that is not given, we provide a way to discover them automatically using heuristics in our implementation in \cref{chap:finding-initial-final}, and in our evaluation, we see that this is mostly sufficient, although there are some exceptions where the heuristic method needs to be supplemented with domain knowledge.
+If the automatic discovery of the role functions is used, the algorithm only requires an OCEL as input.
+
+
+
+We use the plastic production process as our running example.
+The OCEL was specified in the introduction in \cref{sec:intro_ssec:motiv}, which presents the input to our algorithm.
+The role functions were discovered using the heuristic method.
+The final model that our algorithm produces on our running example is given in \cref{sec:intro_ssec:motiv}, in \autoref{fig:motivation-inputoutputminer}.
+
+
+
+\subsection{Aggregation of Events to the Activity Level}
+
+
+
+The input for the first step is a modified OCEL $L = (E, O, \allowbreak EA, \allowbreak OA, \allowbreak evtype, \allowbreak time, \allowbreak objtype, \allowbreak eatype, \allowbreak oatype, \allowbreak eaval, \allowbreak oaval, E2O)$ according to the definition in \cref{chap:my-ocel-definition} and the role functions $role_{in}$ and $role_{out}$ that provide the inputs and outputs for each event instance.
+The events in the OCEL are aggregated to the activity level; specifically, each distinct aggregation of the same activity represents a different way an activity is used in the log; we call this a \emph{configuration} of that activity.
+This step outputs these configurations.
+
+
+
+Consider our running example.
+The activity \emph{Pack} can play two different roles in the material flow, despite being only a single activity.
+In the first process execution, it takes the \emph{Mold} and turns it into a \emph{Product}.
+Thus, one configuration is a single input \emph{Mold}, and a single output \emph{Product}.
+But in the second process execution, \emph{Pack} takes this previously created \emph{Product} in addition to another \emph{Mold}.
+Here, the second configuration is a single input \emph{Mold} and a single input \emph{Product}, which is turned into a single output \emph{Product}.
+
+
+
+\subsubsection{Inputs and Outputs of Events}
+
+
+
+In this step, the role functions are used in combination with the OCEL to find the object types of the input, initial inputs, outputs, and final outputs of each event.
+In addition, two functions that define the previous and next activities of these object types are introduced, so that the context of the neighboring events is kept.
+
+
+
+By using multisets, the number of objects in a role is preserved.
+This later gives rise to the weight of an arc.
+For an event $e \in E$:
+\begin{align*}
+    \mathit{In}_e &\coloneqq \left[ objtype(o) \mid (e, o) \in E2O\ \land\ role_{in}(e, o) = in \right] \\
+    \mathit{Out}_e &\coloneqq \left[ objtype(o) \mid (e, o) \in E2O\ \land\ role_{out}(e, o) = out \right] \\
+    \mathit{Init}_e &\coloneqq \left[ objtype(o) \mid (e, o) \in E2O\ \land\ role_{in}(e, o) = init \right] \\
+    \mathit{Final}_e &\coloneqq \left[ objtype(o) \mid (e, o) \in E2O\ \land\ role_{out}(e, o) = final \right] \\
+\end{align*}
+In combination with the activity, these then form the setting of the event, so we can later aggregate events which have equal settings.
+\begin{definition}[Setting]
+    The \emph{setting} of an event $e \in E$ with $act = evtype(e)$ is $setting_e \coloneqq (act, \mathit{In}_e, \mathit{Out}_e, \mathit{Init}_e, \mathit{Final}_e)$.
+    The events that have the setting $s$ are $\mathit{Events}_s \coloneqq \left\{ e \in E \mid setting_e = s \right\}$.
+\end{definition}
+
+
+
+
+We define two functions that return the previous or next activities that occur for an object type in an event.
+This is necessary so that configurations that directly follow each other get a place connecting them, similar to how in the $\alpha$-algorithm directly-follows causal relations result in a place\autocite{van2004}.
+The $origin$ function provides all previous activities of objects of a type in an event.
+The same is done by the $destiny$ function for the next activities.
+Both map to a multiset, so that the number of times an activity is a previous or next activity is preserved.
+\begin{definition}[Origin and Destiny functions]
+    The \emph{origin function} with signature $origin: E \times \mathbb{U}_{otype} \rightarrow \mathcal{B}(\mathbb{U}_{etype})$ is 
+    \begin{align*}
+        origin(e, ot) \coloneqq [ evtype(prev(o, e)) \mid role_{in}(e, o) = in\,  \land\, objtype(o) = ot ]
+    \end{align*}
+    The \emph{destiny function} with signature $destiny: E \times \mathbb{U}_{otype} \rightarrow \mathcal{B}(\mathbb{U}_{etype})$ is 
+    \begin{align*}
+        destiny(e, ot) \coloneqq [ evtype(next(o, e)) \mid\, role_{out}(e, o) = out\, \land\, objtype(o) = ot ]
+    \end{align*}
+\end{definition}
+
+
+\subsubsection{Aggregating to the Activity Level}
+
+
+The settings are used to aggregate events with the equal input and output object types and activity to the activity level.
+This is then combined with the $origin$ and $destiny$ functions to give the output of the first step of the object flow miner, namely a set of configurations that have some inputs, outputs, and next and previous events for those.
+
+
+
+A configuration aggregates all events with equal settings, and therefore equal input and output object types, with the same multiplicities.
+In addition, for each object type, the possible previous and next activities complete the configuration.
+They combine the functions $origin$ and $destiny$ by aggregating the previous or next activities that occur in \textit{any} event that is part of the configuration, meaning that the functions do not have to be equal for two settings.
+\begin{definition}[Configuration]
+    Let $s = (act, \mathit{In}, \mathit{Out}, \mathit{Init}, \mathit{Final})$ be a setting.
+    For the setting $s$, the \emph{preceding activities} are the combined previous activities of an object type 
+    \begin{align*}
+        preceding_s(ot) \coloneqq \biguplus_{e \in \mathit{Events}_s} origin(e, ot)
+    \end{align*}
+    This is a function $preceding_s: \mathbb{U}_{otype} \to \mathcal{B}(\mathbb{U}_{etype})$.
+    The \emph{succeeding activities} are the combined next activities of an object type
+    \begin{align*}
+        succeeding_s(ot) \coloneqq \biguplus_{e \in \mathit{Events}_s} destiny(e, ot)
+    \end{align*}
+    The \emph{configuration} of a setting $s$ is $configuration_s = (s, \allowbreak preceding_s, \allowbreak succeeding_s)$.
+    The \emph{set of configurations} is $\mathit{Configs} = \left\{ configuration_s \mid e \in E\ \land\ setting_e = s \right\}$.
+    Let $act(c_s) \coloneqq \pi_1(s)$ be the activity of the configuration.
+\end{definition}
+
+
+
+We apply this procedure to our running example.
+The result is visualized in \autoref{fig:algorithm-transitions-step}.
+It shows a box for each configuration, which contains the activity name and the input or initial input object types with their multiplicity in the first row, and the output or final output object types in the second row.
+For two select configurations, the mathematical representation is also shown.
+The colors representing each object type are explained on the bottom left.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/algorithm-transitions-step.pdf}
+    \caption{The configurations of our running example.}
+    \label{fig:algorithm-transitions-step}
+\end{figure}
+
+
+
+
+
+\subsection{Creating Place Candidates}
+\label{chap:generating-transitions}
+
+
+
+For every configuration in the set of configurations, we create a place candidate for each input and output.
+The subsequent steps of the algorithm modify these place candidates, so that the final candidates become places of the resulting object flow net.
+
+
+
+A place candidate is a tuple of three elements.
+First, the object type of the input or output, second a multiset of the activities that precede the place candidate, and third a multiset of the activities that succeed the place candidate.
+Given a configuration $c$, a place candidate is created for each related object type.
+For input or initial input place candidates, the succeeding activity is just the activity of the configuration.
+The same is true for output and final output place candidates.
+For initial inputs or final outputs, an empty multiset $[\,]$ is used for the preceding or succeeding activities, respectively.
+\begin{definition}[Place candidates]
+    Let $c_s = (s, preceding, succeeding) \in \mathit{Configs}$ be a configuration with the setting $s = (act, In, Out, Init, Final)$.
+    The \emph{place candidates} of $c_s$ are 
+    \begin{align*}
+        \mathit{PIn}_c \coloneqq &\left\{ (ot, preceding(ot), [ act ]) \mid ot \in In\right\} \\
+        \mathit{POut}_c \coloneqq &\{ (ot, [ act ], succeeding(ot)) \mid ot \in Out\} \\
+        \mathit{PInit}_c \coloneqq &\{ (ot, [\ ], [ act ]) \mid ot \in Init\} \\
+        \mathit{PFinal}_c \coloneqq &\{ (ot, [ act ], [\ ]) \mid ot \in Final\}
+    \end{align*}
+    For a place candidate $p$ of $c_s$, we define $otype(p) \coloneqq \pi_1(p)$, $preceding(p) \coloneqq \pi_2(p)$, and $succeeding(p) \coloneqq \pi_3(p)$.
+    Let the function $multiplicity(c, p)$ give the multiplicity of $otype(p)$ in the multiset of the setting that created it, so $In(ot)$, $Out(ot)$, $Init(ot)$ or $Final(ot)$, respectively.
+\end{definition}
+
+
+We also consider all place candidates:
+\begin{definition}[Set of all place candidates]
+    The \emph{set of all place candidates} is
+    \begin{align*}
+        \mathit{PAll} \coloneqq \bigcup_{c \in \mathit{Configs}} (\mathit{PIn}_c \cup \mathit{\mathit{POut}}_c \cup \mathit{PInit}_c \cup \mathit{PFinal}_c)
+    \end{align*}
+\end{definition}
+
+
+We note that the definition of each place candidate does not store any reference to the configuration that it was created from.
+In the following steps, a place candidate can change its preceding or succeeding activities, and the configurations that it is related to.
+It also implies that we can freely modify the set of place candidates and the weights, stored for each configuration, stay the same.
+
+
+
+The result when applied to our running example is shown in \autoref{fig:algorithm-created-step}, where for each configuration box, we create place candidates accordingly, colored and annotated by type and showing preceding activities in the first row and succeeding activities in the second row.
+Initial input place candidates are drawn with an empty multiset as the preceding activities, in this case \emph{Fiber} and \emph{Resin}, which we draw in an octagon shape.
+Final output place candidates, which do not have succeeding activities, are drawn as a double-bordered octagon, which holds for \emph{Waste} and one \emph{Final Output}.
+We draw an arc from the place candidate to the configuration if the candidate is input or initial input, and the other way around for outputs or final outputs.
+For two places of the \emph{Resin} and \emph{Mold} type, we additionally show the representation of this place as a tuple.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/algorithm-created-step.pdf}
+    \caption{The configurations and their associated place candidates of our running example.}
+    \label{fig:algorithm-created-step}
+\end{figure}
+
+
+
+\subsection{Detecting Self-Loops}
+
+
+
+A self-loop, or length-one loop, is an activity that directly follows itself on an object type.
+Our model should accurately visualize these self-loops by using the same place as both an input and output place, so this step takes the place candidates and combines the ones that are part of a self-loop.
+
+
+
+Self-loop place candidates can be detected by finding the place candidates for which an activity occurs in both the preceding and succeeding activities.
+This means that the activity occurs twice with the same object with no other activity in between.
+The place candidates belonging to a self-loop must be of the same object type since that is the type that is looped.
+They occur in pairs, one for the input and one for the output place candidate of the loop.
+To create the self-loops in the model, a new place candidate is created that is both input and output, and combines the preceding and succeeding activities of the pair.
+Clearly, an initial or final place can never be involved in a self-loop.
+
+
+
+These requirements are formalized in the following definition:
+\begin{definition}[Self-loop place candidates]
+    The place candidates involved in a self-loop belonging to a configuration are
+    \begin{align*}
+    Loop \coloneqq \{ (p_{in}, p_{out}) \mid\, \, &c \in \mathit{Configs} \text{ with activity } act \text{ such that there exist} \\
+    &\text{place candidates } p_{in} \in \mathit{PIn}_c \text{ and } p_{out} \in \mathit{POut}_c \\
+    &\text{with } otype(p_{in}) = otype(p_{out}) \ \land\ act \in preceding(p_{in}) \ \land \\
+    &act \in succeeding(p_{out}) \}
+    \end{align*}
+\end{definition}
+
+
+For a pair $(p_{in}, p_{out}) \in Loop$ belonging to a configuration $c$, the new place candidate simply contains the previous activities of the input place, and the succeeding activities of the output place: $p_{loop} \coloneqq (otype(p_{in}), preceding(p_{in}), succeeding(p_{out}))$.
+It replaces the two place candidates it originates from, so replace $p_{in}$ by $p_{loop}$ in $\mathit{PIn}_c$, and $p_{out}$ by $p_{loop}$ in $\mathit{POut}_c$.
+
+
+
+Our running example has a single self-loop, the detection and new place creation of which are shown in \autoref{fig:algorithm-selfloops-step}.
+Only the portion of the graph considered in this step is shown, and the remainder stays identical to the previous step.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/algorithm-selfloops-step.pdf}
+    \caption{The detection and creation of a place candidate for the self-loop in our running example.}
+    \label{fig:algorithm-selfloops-step}
+\end{figure}
+
+
+
+\subsection{Combining Equal Place Candidates}
+
+
+
+It is possible that two place candidates are equal tuples of the same object type and refer to identical preceding and succeeding activities.
+This happens if they were created from separate configurations.
+They should refer to the same mathematical object, so that only one of them remains as a place candidate.
+This step modifies the place candidates from the previous step by combining these equal place candidates.
+
+
+The multiplicities of the preceding and succeeding multisets are not taken into account.
+The place candidates that are equal are defined as follows:
+\begin{definition}[Equal place candidates]
+    Let $\mathit{Equal}$ be the equivalence relation defined on place candidates $p_1 = (ot, Prec, Succ)$ and $p_2 = (ot', Prec', Succ')$.
+    It is $(p_1, p_2) \in \mathit{Equal}$ iff $ot = ot'$, $supp(Prec) = supp(Prec')$ and $supp(Succ) = supp(Succ')$.
+
+    The relation $\mathit{Equal}$ applied to the set of all place candidates $\mathit{PAll}$ partitions place candidates into equivalence classes.
+\end{definition}
+Of each equivalence class, a representative place candidate is chosen and all other members are replaced with that candidate.
+
+
+
+The portion of our example where equal place candidates exist and the same portion after their combination is shown in \autoref{fig:algorithm-equalplaces-step}.
+Again, the rest of the graph stays as-is.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/algorithm-equalplaces-step.pdf}
+    \caption{The combination of two pairs of equal place candidates in our running example.}
+    \label{fig:algorithm-equalplaces-step}
+\end{figure}
+
+
+
+
+
+\subsection{Removing Subplaces}
+
+
+
+In the previous step, we modified the place candidates by combining two place candidates that played the same role in the model into a single one.
+In this step, we remove place candidates that are already covered by a more general place candidate.
+A place candidate is more general if the preceding and succeeding activities are supersets of the same activities of the less general place candidates, without multiplicities.
+This is similar to only keeping the maximal relation $Y_W$ in the $\alpha$-algorithm~\autocite{van2004}.
+
+
+
+
+We call the general place candidate the \emph{superplace} and the place candidate to be removed the \emph{subplace}.
+The subplace and superplace must agree in role, since initial input, final output, and regular place candidates cannot be replaced by a place candidate of the other roles.
+
+
+
+\begin{definition}[Subplaces and superplaces]
+    A place candidate $p_{sub}$ is a \emph{subplace} of the \emph{superplace} $p_{sup}$ if $otype(p_{sub}) = otype(p_{sup})$, and $supp(preceding(p_{sub})) \subseteq supp(preceding(p_{sup}))$ and $supp(succeeding(p_{sub})) \subseteq supp(succeeding(p_{sup}))$.
+    Let $\mathit{PAll}$ be the set of all place candidates.
+    Only the maximal superplace is considered in
+    \begin{align*}
+        \mathit{Relation} \coloneqq \{ (p_{sub}, p_{sup}) \mid\ &p_{sub} \in \mathit{PAll} \text{ is a subplace of } p_{sup} \in \mathit{PAll} \\ &\text{ and } p_{sup} \text{ has no superplace} \}
+    \end{align*}
+\end{definition}
+For a pair of subplace and maximal superplace $(p_{sub}, p_{sup}) \in \mathit{Relation}$, we replace the subplace $p_{sub}$ by the superplace $p_{sup}$.
+
+
+
+In our running example, three places each have a single superplace, which they are merged into.
+This process is visualized in \autoref{fig:algorithm-subplaces-step}.
+The entire current formalization is shown.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/algorithm-subplaces-step.pdf}
+    \caption{The merger of three subplaces into their superplaces in our running example.}
+    \label{fig:algorithm-subplaces-step}
+\end{figure}
+
+
+
+
+\subsection{Adding Missing Configurations}
+\label{chap:adding-missing-transitions}
+
+
+
+
+In the final step, missing configurations are added.
+These are necessary when some activity is in the succeeding activities of a place candidate, but there is no configuration of that activity where the place candidate is an input.
+A silent configuration is added to accommodate this requirement.
+This step creates those silent configurations.
+The place candidates remain unchanged.
+
+
+
+Missing configurations are defined as follows:
+\begin{definition}[Missing configuration]
+    A place candidate $p$ is \emph{missing a configuration} for activity $act \in \mathbb{U}_{etype}$ if $act \in succeeding(p)$ but there is no configuration $c \in \mathit{Configs}$ with $p \in \mathit{PIn}_c$.
+    The set of place candidates with a missing configuration is
+    \begin{align*}
+        \mathit{Missing} \coloneqq \{ (p, act) \mid p \text{ has a missing configuration for activity } act\}
+    \end{align*}
+\end{definition}
+
+
+
+For a place candidate that has a missing configuration for activity $act$, there can be multiple configurations of that activity $act$.
+Thus, to accommodate firing any $act$ after a token was placed in $p$, we create a silent configuration for each of the $act$-configurations.
+Those silent configurations move a single token into the input places of the $act$ configuration, of the correct type.
+
+
+So, for each place candidate with missing configuration $(p, act) \in \mathit{Missing}$, we define the configurations that have an input place of the $otype(p)$ object type as 
+\begin{align*}
+    \mathit{Target}_p \coloneqq \{ (c, p_{targ}) \mid\, &c \in \mathit{Configs}\, \land\, p_{targ} \in \mathit{PIn}_c \text{ with} \\
+    &act(c) = act \,\land\, otype(p_{targ}) = otype(p)
+    \}
+\end{align*}
+
+
+For each target $(c, p_{targ}) \in \mathit{Target}_p$, we create the setting $s = (\tau, [ot], [ot], [\,], [\,])$ with only the object type $ot$ as input and output.
+The corresponding configuration $c_s$ has $\mathit{PIn}_c \coloneqq \{ p \}$ and $\mathit{POut}_c \coloneqq \{ p_{targ} \}$.
+There are no initial inputs or final outputs, so $\mathit{PInit}_c \coloneqq \varnothing$ and $\mathit{PFinal}_c \coloneqq \varnothing$.
+As we do not need the preceding and succeeding activities anymore, we use $f: \varnothing \to \varnothing$ for them in the configuration.
+Let $\mathit{Silent}$ be the set of all such $c_s$.
+
+
+In our running example, a single missing configuration is created.
+This process is shown in \autoref{fig:algorithm-missing-step}.
+The new configuration carries the name of the activity that was the cause of its creation in parentheses, for visualization convenience.
+This name corresponds to the activity of the configuration $c$ for $(c,p_{targ}) \in Target_p$.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/algorithm-missing-step.pdf}
+    \caption{The creation of a missing configuration in our running example.}
+    \label{fig:algorithm-missing-step}
+\end{figure}
+
+
+
+
+\subsection{Creating the Model}
+\label{chap:creating-the-model}
+
+
+
+Using the place candidates, the configurations $\mathit{Configs}$ and the silent configurations $\mathit{Silent}$, we create an object flow net.
+It is possible to use weighted arcs, where each arc weight corresponds exactly to the multiplicity of an object type, or variable arcs, where all multiplicities greater than $1$ create a variable arc.
+If variable arcs are used, two different configurations that only differ in the arc weights can now become identical and, therefore, only create a single transition.
+This can prevent overfitting by abstracting away from the precise weights appearing in the log, but reduces the precision since now there are more possible results of firings.
+
+
+In both cases, assume a configuration $c \in \mathit{Configs} \cup \mathit{Silent}$.
+For each configuration, a transition $t_c$ is created, and $l(t_c) = activity(c)$ if $c \in Config$.
+Each place candidate $p \in \mathit{PIn}_c \cup \mathit{PInit}_c \cup \mathit{POut}_c \cup \mathit{PFinal}_c$ becomes a proper place $p$, with $pt(p) = otype(p)$.
+In addition, $role(p) = initial$ if $p \in \mathit{PInit}_c$, and $role(p) = final$ if $p \in \mathit{PFinal}_c$, otherwise $role(p) = regular$.
+If $p \in \mathit{PIn}_c \cup \mathit{PInit}_c$, an arc from $p$ is drawn to the transition $t$ of the configuration.
+The other way around, if $p \in \mathit{POut}_c \cup \mathit{PFinal}_c$, the arc is from $t$ to $p$.
+For these arcs, we differentiate between the two types of models.
+
+
+
+\paragraph{Using weighted arcs.}
+The weight $W$ for an arc connecting $p$ and the transition of a configuration $c$ is given by $multiplicity(c, p)$.
+The model is an object flow net with arc weights $OFN = (N, pt, role)$, where $N = (P, T, W, l)$ is a labeled Petri net with arc weights.
+
+
+
+\paragraph{Using variable arcs.}
+If $multiplicity(c, p)$ for the place to or from a transition of configuration $c$ is greater than $1$, the arc is in $V$, otherwise it is in $F$.
+The model is an object flow net with variable arcs $OFN = (N, pt, role)$, where $N = (P, T, F, V, l)$ is a labeled Petri net.
+
+
+
+The Petri net model of our running example is given in \autoref{fig:algorithm-petrinet-step}.
+It has not changed compared to the previous step, except for dropping the information on places and transitions.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/algorithm-petrinet-step.pdf}
+    \caption{The OFN with weighted arcs discovered by the object flow miner for our running example.}
+    \label{fig:algorithm-petrinet-step}
+\end{figure}
+
+
+
+As an example for variable arcs, we modified our running example so that the first activity \emph{Inject} requires five \emph{Fiber} and three \emph{Resin} objects each.
+The corresponding arcs are simplified into variable arcs as the multiplicity is now $5$ or $3$, respectively.
+These variable arcs are represented by thick arrows.
+We simplified the \emph{Pack} activity as this part is not relevant for the variable arcs.
+\autoref{fig:algorithm-vararcs} shows the output of the object flow miner on the modified running example with both weighted and variable arcs.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/algorithm-vararcs.pdf}
+    \caption{The OFNs with weighted and with variable arcs discovered by the object flow miner for a modified running example with multiple initial inputs for \emph{Inject}.}
+    \label{fig:algorithm-vararcs}
+\end{figure}
+
+
+
+The public OCEL on container logistics~\autocite{containerlogistics} demonstrates why variable arcs are useful.
+In \autoref{fig:algorithm-variablelogistics}, we show the discovered model of the process with weighted arcs above the arrow, and the model with variable arcs and a $10\%$ filter on configurations below the arrow.
+The model size is greatly reduced.
+How that filter works is discussed in the next section.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/algorithm-variablelogistics.pdf}
+    \caption{Using variable arcs and filtering by $10\%$ on configurations in the container logistics log.}
+    \label{fig:algorithm-variablelogistics}
+\end{figure}
+
+
+
+
+
+
+\subsection{Reducing Model Complexity by Filtering}
+\label{chap:filtering}
+
+
+
+An event log can contain highly variable process executions, and thereby applying our method to such a log would generate many configurations for a single activity, potentially degrading the simplicity and readability of the model.
+To combat this issue, we filter in two possible ways.
+\begin{itemize}
+    \item
+    For an activity, configurations that occur less often are filtered out.
+    This can filter out behavior that only occurs infrequently in the log and reduces the number of transitions in the final model by dropping less common configurations first.
+    
+    \item
+    For a place, the preceding or succeeding activities that occur less frequently are filtered out.
+    This restricts which transitions follow which places and reduces the number of arcs.
+\end{itemize}
+Both filtering steps take place between the creation of the configurations and the creation of the place candidates, during the first step of the algorithm.
+
+
+
+We define the filtered log for each activity in the following way.
+A parameter specifies the minimum proportion of the number of events that a configuration must make up.
+For example, setting it to $0.2$ keeps all configurations of an activity that more than $20\%$ of the events of that activity belong to, and filters out the rest.
+\begin{definition}[Filtered configurations]
+    Let $\alpha \in [0, 1]$.
+    The settings of an activity $act \in \mathbb{U}_{etype}$ are $\mathit{Settings}_{act} \coloneqq \{ s \mid s \text{ is a setting with activity } act \}$.
+    Then, the \emph{filtered configurations} are
+    \begin{align*}
+        \mathit{Configs}^{filt} \coloneqq \left\{ c_s \ \middle| \ s \in \mathit{Settings}_{act} \text{ with } \left|\mathit{Events}_s\right| > \alpha \sum_{s' \in \mathit{Settings}_{act}} \left|\mathit{Events}_{s'}\right| \right\}
+    \end{align*}
+\end{definition}
+$\mathit{Configs}$ is replaced by $\mathit{Configs}^{filt}$ before creating the place candidates.
+
+
+
+The activities are filtered as follows:
+\begin{definition}[Filtered preceding and succeeding activities]
+    Let $\beta \in [0, 1]$.
+    Each configuration $c = (act, preceding, succeeding) \in \mathit{Configs}$ has the \emph{filtered preceding or succeeding activities}
+    \begin{align*}
+        preceding^{filt}(ot) \coloneqq [ act \mid\, &act \in preceding(ot) \text{ with }  \\ &m_{preceding(ot)}(act) > \beta |preceding(ot)| ] \\
+        succeeding^{filt}(ot) \coloneqq [ act \mid\, &act \in succeeding(ot) \text{ with } \\ &m_{succeeding(ot)}(act) > \beta |succeeding(ot)| ]
+    \end{align*}
+    In this definition, the absolute value of a multiset $|M|$ sums up the individual multiplicities of the elements.
+\end{definition}
+The configuration $c$ is then replaced by $(c, preceding^{filt}, succeeding^{filt})$ to apply the filter.
+
+
+
+Note that if $\alpha = 0$ or $\beta = 0$ no filtering takes place, since every element in the multiset occurs at least once.
+If $\alpha = 1$ no element is kept, which clears the log, since the parameter applies to all configurations.
+The model consists of isolated subgraphs if $\beta = 1$, since no arcs are drawn except for the direct input and output places of each transition.
+
+
+
+We modify our running example so that only a single \emph{Pack} event exists, and there are eleven executions of the process, one of which uses two \emph{Fiber} objects for \emph{Inject}.
+By setting $\alpha = 0.1$, we filter that deviating configuration, since it represents only $1 / 11$ of the \emph{Inject} configurations.
+This is shown in \autoref{fig:filtering-transitions}.
+
+
+
+\begin{figure}[htbp]
+    \centering
+        \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/filtering-transitions.pdf}
+    \caption{Filtering with $\alpha = 0.1$ in our modified running example.}
+    \label{fig:filtering-transitions}
+\end{figure}
+
+
+
+In addition, we modify our running example so that ten traces \emph{Degas} the mold, and only one bypasses it to directly go to \emph{Trim}.
+We set $\beta = 0.1$, so that in the place with succeeding activities $[Degas^{10}, Trim^{1}]$, the \emph{Trim} is filtered out and there is no silent transition in the model.
+\autoref{fig:filtering-preceding} shows the change.
+
+
+
+\begin{figure}[htbp]
+    \centering
+        \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/filtering-arcs.pdf}
+    \caption{Filtering with $\beta = 0.1$ in our modified running example.}
+    \label{fig:filtering-preceding}
+\end{figure}
+
+
+
+
+
+\section{Annotating the Model with Waste}
+
+
+
+In this section, we introduce how waste, which is defined as \enquote{substances or objects which the holder intends or is required to dispose of} in ISO14040~\autocite{iso14040}, appears in an OCEL, and how these occurrences can be detected and visualized in the discovered OFN.
+The waste detection is the final step of our method.
+
+
+
+\subsection{Waste in Object-Centric Event Logs}
+
+
+
+For calculating waste in an OCEL, there are two approaches, namely by a dedicated attribute or by counting.
+The mass of an object or the mass emitted in an event can be given by a \emph{mass attribute}, which is used to calculate the waste precisely.
+A mass attribute is some universal object attribute \textit{mass} that quantifies an object.
+The exact unit and magnitude of the attribute itself are not essential for waste detection, but rather the proportion between different events and objects quantified by mass, which enables a calculation of their relative impact.
+If such an attribute does not exist, it can be simulated by counting the number of objects, so that at least the number of objects that end up as waste can be determined, or events where there are fewer produced than consumed objects, which might imply implicit waste creation.
+Although the approach utilizing mass is much more precise, it requires detailed and correct bookkeeping when creating the log, whereas the approach through counting works in any OCEL.
+The possibilities for detecting waste in general are the following:
+
+
+
+\begin{enumerate}
+    \item 
+    \label{item:mass-balance}
+    All objects that either enter or leave the system boundary, meaning they are initial inputs or final outputs, are counted or summed by mass, and the difference between the two cases is calculated.
+    If less total mass enters than leaves the system, mass balance is violated, and waste has been produced somewhere.
+    
+    \item
+    \label{item:entire-process}
+    Within the system boundary, waste can occur at the process level, without the ability to assign it to specific events.
+    In our running example, this can happen if a machine used for injecting is slowly used up and becomes waste after a long time and after producing a large number of outputs, so this waste cannot be attributed to individual outputs.
+    This shows up in the mass balance.
+    
+    \item Waste can be explicitly declared in the OCEL.
+    \begin{enumerate}
+        \item
+        A final output object occurring in the log is defined to be waste.
+        In the plastic production, this is the case for objects of the \emph{Waste} type.
+        
+        \item
+        An event is a specific activity for processing waste as input object, such as an event \emph{CollectWaste} (which does not exist in our running example).
+        This can occur for recycling activities, for example.
+        As this can be simulated by giving the object as final output instead of executing the activity, we do not consider this case further.
+
+        \item
+        At the event level, waste can be explicitly declared as an event attribute.
+        For example, during \emph{Inject} a small amount of resin is wasted, which is declared on each \emph{Inject} event as an attribute.
+    \end{enumerate}
+    
+    \item
+    Or waste can be implicitly present, meaning it occurs in the real process but is not recorded in the log.
+    \begin{enumerate}
+        \item
+        An object is simply not used anymore after being produced.
+        For example, a \emph{Mold} fails to pass a quality check and is discarded.
+        The object flow miner already detects these as final outputs, so we do not consider them further.
+        
+        \item
+        \label{item:mass-implicit}
+        The mass or number of the input objects do not add up to the mass or number of the output objects.
+        In the process of our running example, it could happen that a \emph{Trim} event produces multiple \emph{Waste} objects but one is not recorded.
+        Then, there is a difference in the input and output mass of the \emph{Trim} event.
+    \end{enumerate}
+\end{enumerate}
+
+
+We point out that counting is equivalent to assuming a unitless mass of $1$, which allows us to assume that a mass attribute always exists, so we do not consider the case of counting further.
+This leaves four types of waste that we consider separately.
+
+
+\begin{definition}[Types of waste]
+In an OCEL, waste occurs in the following ways.
+\begin{enumerate}[noitemsep]
+    \item 
+    \textbf{System-wide waste}: This is calculated by summing the masses of all input and output objects of the process.
+
+    \item
+    \textbf{Object type waste}: This is calculated by summing the mass of all objects of a type. \\
+
+    \item 
+    \textbf{Explicit event waste}: This is calculated using an event attribute. \\
+
+    \item
+    \textbf{Implicit event waste}: This is calculated by summing the masses of all input objects and all output objects of an event, and taking the difference between the two sums. \\
+\end{enumerate}
+\end{definition}
+
+
+
+
+
+\subsection{Annotating the Model with Waste}
+\label{chap:annotating-the-petri-net}
+
+
+
+The result of the object flow miner, an OFN model showing object flow, is suitable for displaying waste since waste is a specific type of object flow.
+For each of the types of waste that we defined, we give the method to calculate it, assuming a mass attribute $mass \in OA$ exists.
+
+
+Starting with system-wide waste, the approach is straightforwardly calculating the difference between the mass of all initial input and final output objects.
+\begin{align*}
+    syswaste \coloneqq  &\sum_{\substack{e \in E,\, o \in O \\ role_{in}(e, o) = init}} oaval_{mass}(o) - \sum_{\substack{e \in E,\, o \in O \\ role_{out}(e, o) = final}} oaval_{mass}(o) \\
+\end{align*}
+If $syswaste$ is positive, more mass entered the system than left it; this indicates either waste generation or erroneous logging.
+
+
+
+The object type waste can be integrated directly into the Petri net, as text on each object type.
+This has the advantage of showing precisely where the waste was emitted, since an object type can occur multiple times as a final output place, but the waste can be attributed to each of them separately.
+Every final output place is associated with some configuration $c_s \in \mathit{Configs}$ for some setting $s$.
+The object waste of the object type of that place is given by
+\begin{align*}
+    owaste(c_s, ot) &\coloneqq \sum_{e \in \mathit{Events}_s} \sum_{\substack{o \in \mathit{In}_e \\ objtype(o) = ot}} oaval_{mass}(o)
+\end{align*}
+
+
+
+
+For events, there are two different types.
+Explicit event waste is waste that is declared in the log itself; in our case, it appears as an event attribute.
+We call this attribute $mass \in EA$ as well, although it is now defined for events instead of objects.
+If it does not exist, we assume it exists and is equal to $0$.
+The waste given by this attribute can be shown visually in the transition belonging to the configuration $c_s \in \mathit{Configs}$ with the setting $s$.
+For that configuration, it is given by
+\begin{align*}
+    exwaste(c_s) = \sum_{e \in \mathit{Events}_s} eaval_{mass}(e)
+\end{align*}
+
+
+
+Finally, there is implicit waste on events.
+This is waste that was not intentionally put into the OCEL at creation time but can be derived from it.
+This is done by summing the mass of the input objects and subtracting the sum of the mass of the output objects.
+It is formalized for a configuration $c_s \in \mathit{Configs}$ with a setting $s$, considering all events of that setting.
+\begin{align*}
+    imwaste(c_s) \coloneqq \sum_{e \in \mathit{Events}_s} \bigg( &\sum_{o \in \mathit{In}_e} oaval_{mass}(o) + \sum_{o \in \mathit{Init}_e} oaval_{mass}(o) \\ 
+    &- \sum_{o \in \mathit{Out}_e} oaval_{mass}(o) - \sum_{o \in \mathit{Final}_e} oaval_{mass}(o) \bigg)
+\end{align*}
+If the value is positive, there has been unrecorded waste.
+
+
+
+By incorporating these values into our model, we get the extended model that includes waste information:
+\begin{definition}[Waste-Annotated Object Flow Net]
+    Let $OFN$ be the OFN model from the object flow miner, with a mass attribute $mass$ for objects and explicit event waste.
+    A \emph{waste-annotated Object Flow Net} is $WOFN = (OFN, \allowbreak syswaste, \allowbreak owaste, \allowbreak exwaste, \allowbreak imwaste)$, where $syswaste$, $owaste$, $exwaste$ and $imwaste$ are functions as defined above that return information about the waste at the process, object type, or activity level.
+\end{definition}
+
+
+
+
+\subsection{Example}
+
+
+
+Our running example defined in \cref{chap:running-example} contains a mass attribute with masses in \autoref{table:running-example-table-objects}.
+Using this, we show the partially annotated model in \autoref{fig:algorithm-waste-annotated}.
+We only show a selection of the detected waste.
+For instance, the explicit waste is simply $0$ for all events, which we omit.
+On \emph{Inject} the implicit event waste is $1$ in \emph{inject\_1\_1} and $2$ in \emph{inject\_2\_1}, resulting in the average $1.5$ and a total of $3$ waste units detected.
+The total system-wide waste, which is not visualized but provided as output of our implementation is $3$, from a total input mass of $50$ and a total output mass of $47$, consistent with the implicit waste of $3$.
+On \emph{Waste}, the mass of waste produced is shown.
+For completeness, the mass of the initial inputs is also annotated.
+The \emph{Product} is only counted, which shows a single product as an output.
+This shows that mass and counting annotations can be combined.
+In addition, despite the fact that \emph{Product} is not waste, the method for waste detection can still be applied.
+For the mass of the initial inputs, we only switched the \emph{Final} to \emph{Initial} in the $owaste$ definition.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/algorithm-waste-annotated.pdf}
+    \caption{The model of our running example annotated with waste information.}
+    \label{fig:algorithm-waste-annotated}
+\end{figure}
+

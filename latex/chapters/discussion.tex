@@ -1,0 +1,247 @@
+\chapter{Discussion}
+\label{chap:discussion}
+
+\iffalse{
+In this section, you discuss your general approach.
+What design decisions did you make, and, what are the implications of this?
+Maybe your approach computes an exact intermediary result, which is costly in terms of time.
+Does a suitable approximation approach exist?
+What are the implications for that approach.
+You can also dive deeper in very related work and explain why it does not work in certain cases.
+
+
+}\fi
+
+
+In this chapter, we discuss our method, taking into account the evaluation results from \cref{chap:eval}.
+We reflect on the choice of using object flow nets as outputs, and on the assumptions that the object flow miner relies upon.
+Afterward, we consider the design of our heuristic method for discovering role functions.
+In addition, we discuss the usability of waste annotations on an object flow net.
+Finally, we review the strengths and weaknesses of our entire approach to automating LCA.
+
+
+
+\section{Object Flow Nets}
+
+
+
+
+The model discovered by the object flow miner is an object flow net.
+This is a Petri net with weighted or variable arcs, where a variable arc consumes at least one token, whereas variable arcs in OCPNs can also consume or produce zero objects.
+In addition, places are typed and some places are marked as initial or final.
+Therefore, OFNs have commonalities with OCPNs, but their markings are tokens instead of object identifiers.
+The main benefit of OFNs over OCPNs is that they are a simpler model which satisfies the requirement that quantified inputs and outputs of a transition are visualized explicitly.
+
+
+
+Using tokens simplifies the semantics of OFNs, as well-known algorithms for Petri nets can be used.
+For example, we used classic alignments together with flattened event logs in our evaluation to evaluate fitness.
+The purpose of an OFN is to show the inputs and outputs and their multiplicity for each transition.
+For this reason, for every object type, there are at most two input places, a regular and an initial input.
+This avoids the situation where object identifiers are necessary to consume the proper objects from different input places of the same type.
+Thus, anonymous tokens are sufficient for our purpose because in an OFN, a transition represents a transformation of tokens, while in an object-centric Petri net, a transition represents a synchronization point in the control flow of objects, which all persist before and after the transition.
+For these reasons, we chose to use OFNs in this thesis.
+
+
+
+
+
+However, using an OCPN would allow the tracing of each individual object through the model, which is especially useful for finding the path of concrete waste objects.
+In contrast to this qualitative waste analysis, in our evaluation we focused on the quantitative aspect, where the mass or count of waste was shown on transitions or places.
+For this purpose, OFNs are a useful tool.
+
+
+
+
+\section{Object Flow Miner}
+
+
+
+The key step in our method is the object flow miner in combination with the heuristics for the role functions.
+This approach can be used to discover not only as-is models, but also general process models by using filtering.
+If no filtering is applied, the discovered OFN has perfect fitness with our alignments-based computation.
+This makes sense as for each possible combination of events and objects in the log, the appropriate transitions and places are discovered.
+
+
+Our fitness computation uses alignments only on flattened event logs.
+This potentially overestimates true fitness.
+Suppose that two objects of different types have perfect alignment in their filtered Petri net.
+In the entire model, there is a transition that depends on both of them to be in the input places.
+However, this marking is unreachable, meaning the transition cannot fire when replaying the log.
+Then, our approach calculates the fitness as $1$, even though it should be lower.
+
+
+
+
+For the container logistics and procure-to-pay logs, filtering reduced the size of the model at the cost of a lower fitness.
+For the order management log, filtering to get a readable model reduced the fitness to $0$.
+Thus, the object flow miner works well to discover what is in the underlying data, but is not always readily applicable as a general-purpose miner.
+
+
+In the following, we discuss the assumptions underlying the object flow miner, and the limitations to which they lead.
+For that, we analyze the object flow miner itself, and also the heuristic discovery of the role functions.
+
+
+
+
+\subsection{Limitations of the Object Flow Miner}
+\label{chap:limitations-object-flow-miner}
+
+
+
+\paragraph{Assumption of no relation qualifiers.}
+This assumption is easily met by preprocessing the log.
+
+
+
+\paragraph{Underfitting concurrency.}
+In our evaluation in \cref{chap:parallelism}, we observed that the object flow miner underfits concurrent constructs.
+Usually, Petri nets are a good choice if there is concurrency in the underlying data, as they support it natively.
+We also take advantage of this, but allow additional behavior.
+We chose Petri nets as a representation since they provide an intuitive distinction of places for material conditions and transitions for transformations.
+For future work, we suggest an additional algorithm step to properly model concurrency without underfitting.
+
+
+
+\paragraph{Restriction to the local context.}
+Both the heuristics for the role functions and the discovery of configurations in our method are local operations.
+They do not investigate the larger context further than the immediate preceding or succeeding activity.
+This is also the reason for our assumption of a total order of events, since this ensures a deterministic local context.
+It is not clear whether this approach is sufficiently powerful to model all necessary processes that arise in an LCI analysis.
+The current approach worked for all example logs but order management in \cref{chap:eval-order-management}, where a very large model with a high ratio of silent transitions was discovered.
+This was caused by many objects being related to logically distinct but concurrently occurring events.
+For these events, the object flow miner generates silent transitions connecting the activities, which implies a causal relation that does not actually exist.
+We evaluated our method only on four logs, so more research is needed to determine the types of logs where the object flow miner produces these insufficient models.
+In general, it is not possible to trivially transform an object-centric event log with simultaneous events into a log with a total order of time.
+Identical timestamps may occur in logs where operations are effectively instantaneous.
+For example, the creation of a package and the instantiation of the picking process often occur at the same timestamp in the order management process.
+Our approach cannot handle this case.
+
+
+
+
+\paragraph{Disregard of object attribute changes.}
+In addition, we address our handling of object attribute changes.
+Although the OCEL~2.0 standard allows objects to modify their attribute values over time, we assumed that all object attributes remain static.
+We use this restriction because supporting attribute changes would introduce considerable complexity, particularly the challenge of unambiguously determining which value an attribute holds at the specific timestamp of an event.
+For example, suppose that an event $e$ changes a weight attribute, but it requires some time to take effect.
+The event occurs at $time(e)$, yet the attribute is only changed at $time(e) + 5$.
+Then, it is not clear what the input and output weight of the object in $e$ is, since the object flow miner does not know that the change of the object attribute later is caused by $e$.
+Therefore, this design choice prioritizes the stability of the waste annotations over the full flexibility of the OCEL specification.
+
+
+
+
+\subsection{Limitations of the Heuristic Discovery of the Role Functions}
+
+
+
+\paragraph{Assumption of an underlying material process.}
+For discovering the role functions automatically, we presented a heuristic method based on a case distinction.
+The logic of this case distinction is based on assuming that the process contains different patterns for logistical and transformational processes.
+Although our evaluation showed that it worked well on our example logs, this design decision requires the log to exhibit a straightforward pattern.
+The hinge production log, evaluated in \cref{chap:eval-hinge-production}, showed that an input object can be used multiple times, which does not match this pattern and thereby required us to manually correct the role functions.
+Furthermore, the assumptions about logistical and transformational activities are based on material processes, and could be violated for processes on intangible products where physical transformation is not required.
+For future work, we suggest researching improved methods to discover these role functions, for example by taking a larger context of events into account.
+
+
+
+\paragraph{No distinction between intermediate and final objects.}
+If there are unresolved roles after applying the heuristics and a mass attribute is present, this attribute can be used to determine the unknown roles by approximating mass balance.
+Applying MFA in this way assumes that for the entire log, the total input mass is equal to the total output mass.
+This is not necessarily correct, as there might be intermediate products if the log is extracted at a time when the process is still running.
+The hinge production in our evaluation might have exhibited this phenomenon, as some \emph{FormedPart}s and \emph{Hinge}s were detected as waste, even though they might just be intermediate products at the time of the log creation.
+Since OCELs do not have a case notion, it is difficult to decide whether an object is only intermediate or whether it is waste.
+We suggest that the distinction between waste and intermediate products be researched in future work, as currently these products are assumed to be waste.
+
+
+
+In our evaluation, the proposed combination of using heuristics to determine the inputs and outputs and applying the object flow miner on the result generally performed well and only few interventions were necessary, in particular in the hinge production log.
+The filtering capabilities were useful to reduce the complexity of the model.
+Nevertheless, we recognize that there are several suggestions for improvement, such as taking context into account, handling object attribute changes, and allowing simultaneous events.
+Therefore, we answered our research question on modeling the process based on the object flow and presented a tool for this purpose.
+
+
+
+
+
+
+\section{Waste Annotation}
+
+
+
+In the evaluation with the hinge production log, we saw that our method is capable of performing an MFA.
+Inflows and outflows of the process are computed and visualized with their mass.
+Waste flows on object types, as a specific outflow, are quantified in the same manner.
+Explicit waste given by event attributes can also be detected.
+By calculating system-wide waste and mass differences in events, even implicit waste can be determined on both the process and event level.
+Thus, with regard to our research questions about the occurrence and visualization of waste,  our method effectively detects and visualizes waste in an OCEL.
+A limitation is that the annotated information is kept brief.
+
+
+
+\paragraph{Limited information visualization.}
+Although the current implementation of the waste-annotated OFN succeeds in visualizing waste directly in the process model, the existing annotations are rudimentary.
+Currently, the model only visualizes the average and total waste on object types or activities.
+Although this is sufficient for a high-level LCI analysis, it does not offer the depth required for a thorough analysis of process inefficiencies.
+For example, the model does not provide a specific list of the individual objects that constitute the discovered waste, which prevents a user from analyzing the specific attributes or histories of those items.
+Furthermore, additional visualizations can be added, such as distributions of the waste mass, and metrics such as the median and standard deviation.
+This would improve the applicability especially in the intended domain of waste detection.
+
+
+
+\section{Applicability to LCA}
+
+
+
+
+We established that for the hinge production log, the waste flows were annotated on the discovered process model.
+In addition, we showed that the waste calculation for object types can be applied to final outputs and to initial inputs, which demonstrates that our method detects not only waste outflows, but regular outflows and inflows as well.
+This completes the requirements for the MFA part of the LCI analysis.
+The algorithm runs in under a minute, even on large example logs.
+However, there are limitations.
+Our algorithm assumes high-quality data, and does not deal with the data acquisition of the LCI analysis.
+Additional limitations of our approach include the lack of an evaluation of a complete life cycle process and usability.
+In summary, in regard to our research question of how effectively our approach automates the LCI analysis phase, we conclude that the approach is a promising automation tool that discovers a model, inflows, outflows, and waste, but depends on ideal data sets.
+Nonetheless, it contributes to filling the research gap in applying object-centric process mining in the domain of sustainability.
+In the following, we elaborate on the limitations.
+
+
+
+
+
+
+\subsection{Limitations}
+
+
+
+\paragraph{High-quality data.}
+Throughout this thesis, we assumed high-quality data.
+The object flow miner does not sanity-check or estimate missing values, which is possible when evaluating manually.
+Therefore, our approach disregards the fact that real data often has issues~\autocite{ayres1995}.
+Poor data quality can result in a complicated process model unless filtering is applied.
+For instance, wrong timestamps can result in a large and complicated model, similar to the output on the order management log.
+In general, data acquisition presents one of the greatest complexities in conducting LCA~\autocite{grahl}, which is not made easier by our method.
+It is also unlikely that the recorded data is in the OCEL~2.0 format, which has only existed since 2023.
+
+
+
+\paragraph{Lack of reference LCA}
+A significant limitation of the current evaluation is the absence of a direct comparison between the results of the object flow miner and the LCI analysis conducted with traditional manual methodologies.
+While the approach successfully quantified waste streams and demonstrated mass-balance consistency for the hinge production log, this is a simulated log.
+In addition, none of the logs used in our evaluation cover the entire life cycle of their objects.
+In a manual assessment, practitioners often apply abstractions, whereas the object flow miner takes all data into account.
+Consequently, the results discovered by our method might differ from traditional reports, and it is not clear that completely disregarding abstractions leads to better results.
+For these reasons, it would be important to compare the object flow miner applied to a real-world log with a reference LCI analysis for the same data.
+This can also serve as an experiment where the object flow miner is applied to data of a lower quality.
+
+
+
+\paragraph{Usability.}
+The intention of our method is that even people unfamiliar with process mining can interpret the model to find out where waste is created.
+The Ocelescope plugin interface exists so that no technical knowledge is required; however, it can be difficult to understand the entire workflow, including filtering out resources and understanding what the filter parameters do, without any knowledge about process mining.
+Furthermore, it must be explained how Petri nets work.
+Consequently, it would be useful to conduct a usability study with LCA practitioners.
+This would also shed light on the applicability to real-world logs.
+
+

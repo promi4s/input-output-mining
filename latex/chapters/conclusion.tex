@@ -1,0 +1,70 @@
+\chapter{Conclusion}
+\label{chap:conclusion}
+
+
+\iffalse{
+Your conclusion actually follows the same structure as your abstract.
+
+\begin{itemize}
+	\item The domain, i.e., explain the application domain in which your thesis is applicable.
+	\item The problem, i.e., motivate what the problem is you are solving.
+	\item The method, i.e., describe the method you have proposed, and, compare it, briefly \& high level to other approaches. In particular, focus on the benefits of your approach versus the other approach(es)
+	\item The evaluation, i.e., how did you evaluate your method, what results did you obtain  and what do the results indicate?
+\end{itemize}
+
+However, you present what the reader has seen, again, using the same concepts as you have already used in your abstract.
+
+\paragraph{Future Work.}
+Furthermore, you present interesting directions for future work!
+
+}\fi
+
+
+This thesis explored the application of object-centric process mining to life cycle assessment.
+It contributes to the automation of LCI analysis, a critical phase in LCA responsible for modeling and quantifying the inputs and outputs of a system.
+As a particular use case, we focused on waste detection, as waste can be derived from the inventory.
+We motivated our research by highlighting that traditional LCI analysis is often a manual, time-consuming, and costly procedure and typically results in static models that are difficult to update.
+
+
+
+
+For this purpose, we proposed the object flow miner, a discovery algorithm that constructs an object flow net directly from object-centric event logs.
+These nets visualize the transformation of input objects into output objects for every activity, together with the corresponding object types and multiplicities.
+In addition, the inputs and outputs of the entire process are marked.
+The advantage of this approach is its ability to distinguish between different configurations of the same activity.
+In contrast to existing process mining algorithms that focus on control flow, the OFN explicitly visualizes the object flow based on inputs and outputs.
+We further extended our approach by annotating an OFN with waste data derived from quantitative mass attributes or object counts, achieving waste detection.
+
+
+
+As a prerequisite, we required high-quality OCELs with certain restrictions, such as a total order of events, and the absence of object attribute changes.
+Optionally, filtering parameters and the desired waste detection can also be specified.
+On these inputs, the role functions are computed heuristically, which are used for the object flow miner that discovers an OFN and annotates it with waste.
+This effectively automates the LCI analysis.
+
+
+
+    
+The evaluation of our approach showed its effectiveness in both theoretical and practical scenarios.
+The algorithm discovered the basic constructs such as exclusive choice, loops, and non-free choice found in process models, but the discovery of parallelism is poor, and the OFN semantics do not allow for discovering implicit places.
+Our method generated as-is models of the process with close to perfect fitness on four public OCELs.
+When applied, filtering successfully reduced the size of process models to concise representations of the underlying processes.
+The application to the hinge production log validated the applicability of the method for waste detection.
+The annotated OFN revealed waste information on object types, as well as implicit waste on activities.
+This information is derived from a provided mass attribute or counting automatically.
+By applying the waste detection in reverse to the input object types as well, our approach semi-automated the LCI analysis phase, requiring only two manual hints.
+The runtime performance was shown to be acceptable for practical use.
+However, a major limitation is that we did not compare our approach with a reference LCI analysis on real-world data.
+
+
+
+\section{Future Work}
+
+The limitations of our algorithm suggest various directions for future work.
+Our approach assumes that events never occur simultaneously, which is typically not the case, as we observed in our evaluation.
+Therefore, handling simultaneous events would allow using the method on more OCELs.
+Additionally, supporting object attribute changes would also make the approach more general, as currently attributes are assumed to be static.
+The heuristic discovery of role functions, which is currently a case distinction based only on the preceding and succeeding activity of the object traces, could be improved by analyzing a wider context of events.
+Further research into detecting parallelism and implicit places would enhance the precision of the discovered object flow nets.
+Finally, visualizing the paths of individual objects through the model would allow for a deeper root-cause analysis of the detected waste.
+

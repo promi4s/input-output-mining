@@ -1,0 +1,454 @@
+\chapter{Introduction}
+\label{chap:intro}
+
+\iffalse{
+First of all, we encourage you to read Prof.\@ van der Aalst's guide on how to write papers~\autocite{beautiful}.
+
+In this section, you introduce the work to your audience.
+Even though this is the first chapter of your thesis, you should not necessarily write this chapter first.
+It is often easier to write this chapter at the end of the thesis writing.
+In this part of your introduction, i.e., the part before the Motivation section (\cref{sec:intro_ssec:motiv}), you write a paragraph (not just a sentence) for each of the bullet points mentioned in the abstract:
+
+\begin{itemize}
+	\item Domain, i.e., explain the application domain in which your thesis is applicable.
+	\item Problem, i.e., motivate what the problem is you are solving.
+	\item Method, i.e., describe the method you have proposed, and, compare it, briefly \& high level to other approaches. In particular, focus on the benefits of your approach versus the other approach(es)
+	\item Evaluation, i.e., how did you evaluate your method and what do the results indicate?
+\end{itemize}
+
+Optionally, you can finalize this part with a little overview of what is still to come in this chapter:
+\enquote{The remainder of this chapter is structured as follows.
+	In \cref{sec:intro_ssec:motiv}, we motivate the need for \dots{}
+	In \cref{sec:intro_ssec:probs}, we provide a formal problem statement.
+	\dots
+}
+
+Before we dive into the motivation section, a few general guidelines for writing:
+\begin{enumerate}
+	\item Write \emph{active} and in the \emph{present tense}.
+	\item Avoid \enquote{optionality} as much as possible, i.e., usage of the following words should (pun intended) be minimized:
+	      \begin{itemize}
+		      \item could
+		      \item would
+		      \item should
+		      \item may
+		      \item might
+		      \item can
+		      \item will
+		      \item \dots
+	      \end{itemize}
+	      Good: We present a method that ...\\
+	      Bad: We will present a method that ...\\
+	      Good: We use function $f$ and compute its inverse.\\
+	      Bad: We can use the function $f$ and will compute its inverse.
+	\item Do not use \verb|\\| to generate line breaks, but an empty line % we used a few before, however do not use them in text!
+	\item Position the caption of a Figure below the figure.
+	\item Position the caption of a Table above the table.
+	\item Write Section Headings and Titles Like This\\
+	      Good: Approximation Bias in Unstable Systems\\
+	      Bad: Approximation bias in unstable systems
+	\item Be consistent in your references.
+	      \begin{itemize}
+		      \item Make sure that the name of the same author is always the same (using DBLP helps for this)
+		      \item Titles should be consistent. Either use the style previously described, i.e., Approximation Bias in Unstable Systems or Approximation bias in unstable systems (this is allowed in the references, opposed to your own section headings and titles, however, \emph{BE CONSISTENT}).
+	      \end{itemize}
+\end{enumerate}
+
+\section{Motivation}
+\label{sec:intro_ssec:motiv}
+
+In this section, you explain to the reader why:
+\begin{enumerate}
+	\item The problem you are solving is relevant to be solved.
+	\item The existing solutions do not solve the problem and/or have significant problems/shortcomings when doing so.
+\end{enumerate}
+Note that parts of this section are already highlighted in both the abstract and the introduction.
+However, in this section, you dive a bit deeper.
+In a good motivation, you show a (simple) example on which current methods fail, yet, the method that you are going to describe in this thesis actually yields a better result.
+
+For example, assume that your thesis describes a new \emph{process discovery} algorithm that is able to handle noise, incomplete behavior, and, on top of that, is able to apply label-splitting.
+You can take an (example) event log and show that existing algorithms result in models that are of suboptimal quality.
+Finally, you show a model discovered by your fancy algorithm, and, you explain why this model is so much better.
+
+\section{Problem Statement}
+\label{sec:intro_ssec:probs}
+
+In this section, you introduce the problem that you are solving.
+A good problem statement is a concise, more general statement of the example motivation that you have used in the motivation section.
+
+For example, in the case of our previous example:
+
+\begin{displayquote}
+	Real event data contains infrequent and incomplete behavior.
+	Furthermore, different recordings of the same activity may refer to conceptually different contextual executions.
+	Existing, state-of-the-art process discovery algorithms cannot discover process models of adequate quality, given event data of the previously described form.
+\end{displayquote}
+
+\section{Research Questions}
+
+The research questions you pose, are questions you need to (largely) answer in order to solve the problem.
+Basically, the combined set of answers to the questions you pose, allow you to solve the research problem.
+
+From the book of Justin Zobel, \enquote{Writing for Computer Science}~\autocite{DBLP:books/sp/Zobel14} (which we highly recommend you to read before writing):
+
+\begin{displayquote}
+	A hypothesis or research question should be specific and precise, and should be
+	unambiguous; the more loosely a concept is defined, the more easily it will satisfy
+	many needs simultaneously, even when these needs are contradictory. And it is
+	important to state what is not being proposed—what the limits on the conclusions
+	will be.
+\end{displayquote}
+
+In the context of our example, we can define many relevant research questions:
+\begin{enumerate}
+	\item What are typical prominent noise patterns in real event data?
+	\item How to detect noise patterns in event data?
+	\item How to detect infrequent behavior in event data?
+	\item How to detect contextually different executions of the same activity?
+	\item How to balance between detected noise patterns, infrequent behavior and imprecise labels?
+	\item \dots
+\end{enumerate}
+Typically, your thesis consists of 3-5 research questions (often multiple more questions can be defined).
+
+\section{Research Goals}
+
+In this section, you present your research goals.
+A research goal is a concise statement that s.t., achieving the goal helps you in (partially) solve a research question.
+Hence, the research questions and goals are often very related.
+Furthermore, it should be obvious for the reader what goal answers what problem.
+
+In the context of our previously mentioned questions, some example goals are:
+\begin{itemize}
+	\item Conduct a systematic literature review on noise patterns in real event data.
+	\item Design a noise detection algorithm.
+	\item Formalize the notion of incompleteness in an event log.
+	\item \dots
+\end{itemize}
+
+\section{Contributions}
+
+In this section, you list the contributions that your thesis makes to our wonderful world (of science).
+Again, there is a strong link to the previous section.
+Usually, you have achieved your research goals.
+Hence, the contributions are concrete statements of the goals you have achieved.
+Additionally, your evaluation (most likely also stressed as a goal) is a contribution.
+Any implementation or prototype can also be quantified as a contribution.
+
+Some examples:
+\begin{itemize}
+	\item A systematic literature review covering 35 articles on noise patterns in real event data
+	\item A noise detection algorithm based on dynamic programming and symbolic linking
+	\item ...
+\end{itemize}
+
+\section{Thesis Structure}
+In this section, you outline the remainder of the thesis.
+
+The remainder of this thesis is structured as follows.
+In \cref{chap:related_work}, we discuss related work.
+In \cref{chap:prelim}, we present basic mathematical preliminaries, used throughout the thesis.
+
+}\fi
+
+
+% =========
+% START
+% =========
+
+
+\iffalse{
+
+Human activities have globally degraded the ecosystem of the earth, posing a danger to the future of nature and society.
+The UN calls for urgent action to mitigate the effects and protect environmental and human health~\autocite{un2019}.
+These concerns translate into increased environmental awareness of consumers, leading to a preference for environmentally sustainable products, which is motivating companies to disclose their impact and improve their eco-friendliness~\autocite{vieira2016}.
+So-called green products should use fewer natural resources, reduce environmental impacts, and produce less waste~\autocite{costa2021}.
+However, accurately determining the impacts of a product and its production process is not trivial.
+
+}\fi
+
+
+
+A widespread method to determine various environmental impacts of a company process is Life Cycle Assessment (LCA), where a product is analyzed regarding environmental aspects over the course of its entire life cycle, from the extraction of the necessary raw materials to the manufacture, use, and disposal.
+However, this comprehensive nature makes LCA time-consuming, as many materials and sources are taken into account.
+This complexity, combined with the need for domain experts, makes LCA expensive~\autocite{ortmeier2021}.
+Furthermore, an LCA only captures a snapshot in time, and the work has to be repeated if the process is changed~\autocite{schneider2023}.
+Another issue is that the process is often simplified in order to make the necessary calculations easier~\autocite{grahl}, which disregards some details.
+
+
+
+We suggest addressing these issues with traditional LCA by utilizing process mining, which provides a set of methods to handle data consisting of fine-grained process events to find patterns and bottlenecks.
+Object-Centric Process Mining (OCPM) is a well-suited technology for this purpose, as it provides Object-Centric Event Logs (OCELs), which model objects that interact through events, both of which can also have attributes.
+This makes them powerful enough to capture the interactions of complex life cycle processes, and provide the data for algorithms.
+More specifically, we apply OCPM to the second phase of an LCA, the Life Cycle Inventory analysis (LCI analysis), a critical step because the subsequent phases depend on it~\autocite{ansah2021}.
+It is also the most data-intensive and time-consuming phase~\autocite{kock2023}.
+Therefore, it benefits from automation.
+In this phase, the inventory is discovered, that is, the quantified inputs and outputs of the process, including a model of their interactions.
+Process inputs and outputs include raw materials, products, energy, emissions, and waste~\autocite{kock2023}.
+Often, a Mass Flow Analysis (MFA) is used to discover the model, which uses information about the specific masses of materials to quantify the entire system.
+
+
+
+In order to compute the inventory in the LCI analysis, it is necessary to know the inputs and outputs of the entire process and of each activity.
+In the OCEL~2.0 standard~\autocite{ocel20}, events can be related to objects, but the standard does not define whether an object is an input, output, or both in an event.
+Current process mining algorithms mine the control flow, in which events provide a synchronization point in the life cycle of objects.
+In the material flow perspective, however, events are transformations of some input objects into some output objects.
+As OCPM uses objects to represent materials, we also call this the \emph{object flow}.
+Therefore, to discover the object flow, information about the inputs and outputs of events is required.
+Thus, to achieve the goal of automatically discovering a process model suitable for LCI analysis, an algorithm that mines the object flow is needed.
+In this thesis, we develop such an algorithm, which we call the \textbf{Object Flow Miner}.
+
+
+
+It discovers an \textbf{Object Flow Net} (OFN), an adapted Petri net model based on the role that objects play in an activity, such as input or output.
+The main utility of this model is to visualize and quantify which input object types are transformed into which output object types in activities, therefore visualizing the object flow.
+It also shows the inputs and outputs of the process itself.
+If in addition, information about the mass of objects is given, we can perform an MFA that quantifies the inputs and outputs of the process.
+This is necessary for the LCI analysis.
+
+
+
+A special case of process output is waste.
+Waste detection can be an important use case for LCA, since the reduction of waste helps the environment and improves the efficiency of a manufacturing process~\autocite{barrionuevo2025}.
+Knowledge of the inputs and outputs of the process allows calculating the waste produced by each output object type.
+In addition, a difference between the input and output mass or object count of an individual event can reveal implicit waste.
+This is particularly powerful because this type of waste is not directly given in the data.
+We extend our method with waste annotations on the OFN, which shows where waste occurs in the object flow and, if there is sufficient data, how much.
+
+
+
+Thus, our algorithm serves to perform the LCI analysis step of an LCA, by providing a quantified process model, and is especially suited for waste detection.
+Leveraging this for automating LCA speeds up the process, uses less manpower and money, and with automated workflows in place, changes to the process can be incorporated more easily.
+In addition, calculations can be done exactly by the program without the need for abstraction.
+Therefore, our thesis contributes to the field of sustainability by addressing a gap in environmental reporting.
+Apart from this, the object flow miner can also be used outside the LCA context without waste annotation as a general process discovery algorithm.
+Therefore, in this thesis, we also contribute a new method of discovering a process model.
+
+
+We evaluate our approach, where we take into consideration how it handles basic process model constructs in isolation, as well as complete public OCELs.
+In this regard, we find that the algorithm can mostly handle common process constructs and discovers a useful model of the object flow.
+Since our goal is to apply this method to aid in LCA, we also examine how useful the discovered model and the waste detection are for the application in LCA.
+We also measure the runtime, which is acceptable.
+
+
+
+
+\section{Motivation}
+\label{sec:intro_ssec:motiv}
+
+
+
+Suppose a company producing plastic casings wants to investigate their manufacturing process, especially the emitted waste.
+They do not analyze the entire life cycle, in particular, not the production of the precursors and the use of the product, since these are outside the scope of the company.
+The company logs production events in the OCEL format and includes an attribute for the weight of every input or output of the process.
+
+
+
+The process is visualized in \autoref{fig:motivation-inputoutputminer}, where the octagon-shaped boxes are process inputs and the octagons with double borders are process outputs.
+In the process, first, a \emph{Fiber} is mixed together with some \emph{Resin} and injected into the machine to form a \emph{Mold}, which is colored orange.
+The engineers are experimenting with an optional \emph{Degas} step, which removes air bubbles from the mold but increases cost.
+Since this step is optional, the model includes a silent transition.
+After the mold has cooled, it is \emph{Trim}med, where impurities in the plastic are removed, which end up as \emph{Waste}.
+Two molds that went through this process are packed into a single output, which is why the upper \emph{Pack} consumes only the mold, and the lower transition takes the created product and another mold to give a new \emph{Product}.
+Our algorithm can handle links between cases, such as the \emph{Pack} transition that takes molds from two production cycles, which would not be possible in a case-based log without objects.
+
+
+For this example, we only consider a single produced \emph{Product}, with one mold that underwent the optional degassing and one that did not.
+The OCEL is conceptually given in \autoref{table:running-example-table-events}, which shows the events, and \autoref{table:running-example-table-objects}, which shows the objects.
+In the events table, the events are identified by IDs in the first column, and their event type (which we call \emph{activity} in this thesis) in the second column.
+Instead of creating a second table for the $E2O$-relations, we show all related objects with their IDs in the third column, without qualifiers.
+The objects also have a mass that the company logs.
+
+    \begin{table}[htbp]
+        \centering
+        % First column has background color black!5
+        \begin{tabular}{|>{\columncolor{black!5}}l|l|l|} 
+            \hline
+            % Header row has background color black!5
+            \rowcolor{black!5} 
+            \textbf{Event ID} & \textbf{Activity} & \textbf{Related Objects} \\ 
+            \hline
+            \texttt{inject\_1\_1} & Inject & \texttt{fiber\_1}, \texttt{resin\_1}, \texttt{mold\_1} \\
+            \texttt{degas\_1\_2} & Degas & \texttt{mold\_1} \\
+            \texttt{trim\_1\_3\_1} & Trim & \texttt{mold\_1}, \texttt{waste\_1\_1} \\
+            \texttt{pack\_3} & Pack & \texttt{mold\_1}, \texttt{product\_1} \\
+            \hline
+            \texttt{inject\_2\_1} & Inject & \texttt{fiber\_2}, \texttt{resin\_2}, \texttt{mold\_2} \\
+            \texttt{trim\_2\_3\_1} & Trim & \texttt{mold\_2}, \texttt{waste\_2\_1} \\
+            \texttt{trim\_2\_3\_2} & Trim & \texttt{mold\_2}, \texttt{waste\_2\_2} \\
+            \texttt{trim\_2\_3\_3} & Trim & \texttt{mold\_2}, \texttt{waste\_2\_3} \\
+            \texttt{pack\_4} & Pack & \texttt{mold\_2}, \texttt{product\_1}, \texttt{product\_2} \\
+            \hline
+        \end{tabular}
+    \caption{Events of the plastic production example.}
+    \label{table:running-example-table-events}
+    \end{table}
+    
+    \begin{table}[htbp]
+        \centering
+        % First column has background color black!5
+        \begin{tabular}{|>{\columncolor{black!5}}l|l|l|} 
+            \hline
+            % Header row has background color black!5
+            \rowcolor{black!5} 
+            \textbf{Object ID} & \textbf{Object Type} & \textbf{Mass attribute} \\ 
+            \hline
+            \texttt{fiber\_1} & Fiber & \texttt{11} \\
+            \texttt{resin\_1} & Resin & \texttt{12} \\
+            \texttt{mold\_1} & Mold & $?$ \\
+            \texttt{waste\_1\_1} & Waste & \texttt{2} \\
+            \texttt{product\_1} & Product & \texttt{20} \\
+            \hline
+            \texttt{fiber\_2} & Fiber & \texttt{13} \\
+            \texttt{resin\_2} & Resin & \texttt{14} \\
+            \texttt{mold\_2} & Mold & $?$ \\
+            \texttt{waste\_2\_1} & Waste & \texttt{3} \\
+            \texttt{waste\_2\_2} & Waste & \texttt{5} \\
+            \texttt{waste\_2\_3} & Waste & \texttt{2} \\
+            \texttt{product\_2} & Product & \texttt{35} \\
+            \hline
+        \end{tabular}
+    \caption{Objects of the plastic production example.}
+    \label{table:running-example-table-objects}
+    \end{table}
+
+
+
+The proposed object flow miner generates the model shown in \autoref{fig:motivation-inputoutputminer}, the same figure that we used as a process visualization.
+Note that this is \emph{not} an Object-Centric Petri Net (OCPN), as it does not fire with objects but tokens, and the place colors are visualization hints.
+Instead, it is an object flow net, which is a special Petri net in which the single-bordered octagon places represent process inputs, while double-bordered octagons represent process outputs.
+The defining principle of an OFN is that incoming arcs in a transition correspond directly to input object types, with arc weights indicating the specific quantity of each object type consumed.
+The same holds for outgoing arcs and outputs.
+Thus, the \emph{Inject} transition represents that a single \emph{Fiber} and a single \emph{Resin} are transformed into a single \emph{Mold} (orange).
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/motivation-inputoutputminer.pdf}
+    \caption{The production process of plastic cases in our fictional example, discovered by our proposed method.}
+    \label{fig:motivation-inputoutputminer}
+\end{figure}
+
+
+
+As the company recorded the mass, we annotate the discovered OFN with information about the quantities of the inputs and outputs in \autoref{fig:motivation-inputoutputminer-annotated}.
+This calculation is performed automatically.
+The company can use the result as the LCI analysis step in an LCA.
+The quantity of waste emitted is given on the \emph{Waste} object type.
+In addition, the total input mass in the process is $50$, while the total output mass is $47$.
+Therefore, the company knows that a waste of $3$ units was created and not recorded.
+This is because the implicit waste on the \emph{Inject} transition is $3$, which means that there is a discrepancy between the input and output mass in \emph{Inject} events.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/motivation-inputoutputminer-annotated.pdf}
+    \caption{The annotated OFN of the plastic production process.}
+    \label{fig:motivation-inputoutputminer-annotated}
+\end{figure}
+
+
+
+
+\section{Problem Statement}
+\label{sec:intro_ssec:probs}
+
+
+
+Currently, the LCI analysis phase in an LCA, which creates a model of the process and its inputs and outputs, is done by hand or with supporting software.
+Process mining has the potential to automate it, but existing process mining algorithms only discover the control flow instead of the material flow.
+For analyzing the material flow, it is necessary to know which objects are inputs and which objects are outputs in an event.
+This also means that there is no current method that uses OCPM for waste detection.
+
+
+
+To illustrate this issue, we apply the object-centric inductive miner~\autocite{van2020} implemented in \texttt{pm4py}~\autocite{pm4py} to the OCEL from the previous section.
+The resulting OCPN in \autoref{fig:motivation-inductiveminer} does not show whether the object types are process inputs, process outputs or neither of those, as each object type has precisely one initial and final place.
+There are more silent transitions representing loops than in the OFN model, which hinders readability.
+The OCPN generated by the inductive miner is less precise than the OFN, since \emph{Pack} can be looped with instances of \emph{Product}, although in the log this is not the case; in reality, \emph{Pack} combines the previous \emph{Product} with a new mold coming from \emph{Trim}, and puts it into another \emph{Product}.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/motivation-inductiveminer.pdf}
+    \caption{The production process of our fictional example, discovered by the object-centric inductive miner.}
+    \label{fig:motivation-inductiveminer}
+\end{figure}
+
+
+
+Since the Inductive Miner is based on the control flow, and does not know the inputs and outputs of an event, the model does not differentiate between the case where \emph{Pack} takes a single \emph{Mold} and gives a \emph{Product}, and the case where \emph{Pack} takes a \emph{Mold} together with a \emph{Product} as input.
+Moreover, \emph{Pack} contains a variable arc for \emph{Product}, and therefore does not show the exact quantity of products associated with it.
+In contrast, the OFN that our algorithm produces contains two transitions of the \emph{Pack} activity, both showing the quantity of \emph{Product} consumed and produced.
+This ability of the object flow miner is essential for distinguishing the roles of transitions with the same activity in the object flow.
+\iffalse{
+Both types of \emph{Pack} handle the related objects differently and, therefore, play a different role in the object flow of the process.
+However, the model produced by the Inductive Miner does not show this distinction.
+}\fi
+
+
+The major conceptual difference between an OCPN and an OFN is that transitions serve a different purpose.
+In an OCPN, a transition represents a synchronization point in the life cycle of objects, which possess an identifier and exist before and after the transition.
+In contrast, in an OFN, there are regular, non-identifier tokens, and a transition represents a transformation of the input tokens into the output tokens.
+Thus, in an OFN, tokens representing objects are consumed or produced by transitions and might not exist before or after a transition is fired.
+
+
+
+Moreover, as the Inductive Miner does not know which objects the inputs and outputs of each activity are, it is not able to quantify them and, thereby, unable to determine the waste in this process.
+
+
+
+\section{Research Questions}
+
+
+
+In the domain of using OCPM, specifically automating LCI analysis and detecting waste, we investigate the following research questions:
+\begin{enumerate}
+	\item How can a model of the object flow in an event log be discovered, including the inputs and outputs at the process level?
+	\item How is waste recorded in an OCEL?
+	\item How can this waste be read from an OCEL and visualized in the model?
+    \item To what extent is the LCI analysis phase automated by the OCPM approach?
+\end{enumerate}
+
+
+
+\section{Research Goals}
+
+
+
+To answer the aforementioned research questions, our research goals are as follows:
+\begin{itemize}
+	\item Develop a process discovery algorithm that mines the object flow in an event log, including the inputs and outputs on the process level, and yields a process model based on that.
+	\item Determine the types of waste that can occur in an event log.
+	\item Show how information about this waste is integrated into the discovered process model.
+    \item Demonstrate how this approach is used to automate LCI analysis in an LCA.
+\end{itemize}
+
+
+
+\section{Contributions}
+
+
+In an effort to achieve the research goals, we contribute the following to the field of sustainability using process mining:
+\begin{itemize}
+    \item A review of the literature on the use of process mining to automate LCA.
+	\item A process discovery algorithm that mines a model based on Petri nets, where each transition describes a combination of input and output object types that occur with this activity.
+	\item A summary of the representations of waste that can occur in an event log.
+	\item Methods that extract the different types of waste from a log, and visualize it in the model generated by the discovery algorithm.
+    \item An automatic procedure to perform the LCI analysis phase in LCA.
+\end{itemize}
+
+
+
+\section{Thesis Structure}
+
+The remainder of this thesis is structured as follows.
+In \cref{chap:prelim}, we present the concepts of LCA and OCPM as they are used throughout this thesis.
+In \cref{chap:related_work}, we discuss related work in the domain of applying process mining to LCA and other techniques to improve sustainability.
+Subsequently, we show the method we developed in \cref{chap:method}.
+For further specification, we present a possible implementation of a prerequisite of our method in \cref{chap:impl}, which also contains an explanation of a user interface for our method.
+We evaluate the approach in \cref{chap:eval}.
+Afterward, in \cref{chap:discussion}, we discuss the design choices we made and their implications, and also the expressivity of our evaluation.
+The conclusion of the thesis is given in \cref{chap:conclusion}, together with some directions for future work.

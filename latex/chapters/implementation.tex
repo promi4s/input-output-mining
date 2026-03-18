@@ -1,0 +1,285 @@
+\chapter{Implementation}
+\label{chap:impl}
+
+\iffalse{
+This section is only needed if there are non-trivial parts of your approach that require clarification.
+You do not need to show the design of your code, or, pseudo code.
+Only focus on non-trivial aspects.
+
+For example, the \emph{Inductive Miner}~\autocite{DBLP:conf/apn/LeemansFA13} clearly describes the requirements for the \enquote{cuts} that it finds.
+How you actually compute these cuts, i.e., combined with correctness proofs w.r.t. the requirements posed, is a good example of what can be added here.
+
+Ideally, your previous chapter is so clear, that you do not need this chapter :-), i.e., implementing it is simply clear from the description.
+}\fi
+
+
+Our implementation consists of two parts.
+First, we expand on the method by detailing how the role functions required by our method can be discovered heuristically.
+Second, we show the implementation of our entire approach in Ocelescope~\autocite{ocelescope}, a tool for using OCPM techniques.
+
+
+
+
+\section{Discovering the Role Functions Automatically}
+\label{chap:finding-initial-final}
+
+
+
+In our method, we assumed that for an input OCEL the functions $role_{in}: E \times O \rightarrow \{in, init, \bot\}$ and $role_{out}: E \times O \rightarrow \{out, final, \bot\}$ are given.
+We provide a method to discover them automatically.
+This section presents the implementation of this functionality.
+
+
+
+This is achieved by exploiting the total order of events based on timestamps.
+In the simplest case, we assume that an object is an output of an event if it is related to a later event, and an input if it is related to a previous event.
+If there are two events $e, e' \in E$ with $time(e) < time(e')$ and an object $o \in O$ related to both, meaning $(e, o) \in E2O$ and $(e', o) \in E2O$, we set an output on the previous event, $role_{out}(e, o) = out$, and an input on the later event, $role_{in}(e', o) = in$.
+The total order ensures that this is valid.
+These definitions also immediately satisfy the consistency condition of the role functions.
+
+
+
+To discover the initial inputs and final outputs in an event, we use a case distinction based on the nature of the event.
+Events are categorized as logistical or transformational.
+
+
+\paragraph{Logistical events.}
+An event is a logistical event if it semantically reflects movement, storage, or change of state of associated objects, all of which persist until after the event.
+
+\paragraph{Transformational events.}
+An event is a transformational event if it semantically represents a consumption of the inputs to create a new output, such that the inputs might not exist in their original form after the event.
+
+
+
+\iffalse{
+
+\subsection{Logistical and transformational events}
+
+We need the domain-specific definition in (3) since there is no technical difference between an object that is produced by an event and an object that is the output of an event but was also given to the process.
+For instance, say an activity \emph{Load Truck} takes some goods and loads them onto a truck.
+When that truck occurs for the first time in the log, we semantically understand that it comes from the outside and that it should be an initial input of the process, and also an output of \emph{Load Truck} as a truck with goods afterward.
+However, all the OCEL stores is that such an \emph{Load Truck} event is related to some goods, which occurred before in the log but not after the event, and a truck, which occurs later in the log.
+A different situation, which importantly presents  itself \emph{in the same manner} in the OCEL, would be that a machine takes some input parts and forges a single output part from them, consuming the inputs and giving the output part to the next machine.
+But in that scenario, we would intuitively not consider that output part to come from outside the system, so it should not be an initial input.
+This leads to the differentiation of events as being either \emph{logistical}, like the example of the truck, or \emph{transformational}, for which the machine is an example.
+We will use these concepts in our heuristics.
+
+
+
+}\fi
+
+
+We classify each event as one of seven cases, which are shown in \autoref{table:impl-classification}.
+The columns correspond to the number of objects related to the event.
+The first three cases assume the event to be logistical.
+The next three cases assume an underlying transformational event.
+The final case is a fallback and is treated as transformational as well.
+The order is important and the cases are considered in ascending order, from top to bottom in the table.
+
+
+
+\begin{table}[h]
+    \centering
+    % \makebox[\textwidth][c] creates a box the width of the text,
+    % but allows the content inside to overflow into margins while staying centered.
+    \makebox[\textwidth][c]{
+        \begin{tabular}{|>{\columncolor{black!5}}l|l|l|l|l|} 
+            \hline
+            \rowcolor{black!5} 
+            \textbf{Event Classification} & \textbf{Only Before} & \textbf{Before and After} & \textbf{Only After} & \textbf{Only in Event} \\ 
+            \hline
+            Fully Logistical & $0$ & all & $0$ & $0$ \\
+            Logistical with Before & $> 0$ & $\geq 0$ & $0$ & $0$ \\
+            Logistical with After & $0$ & $\geq 0$ & $> 0$ & $0$ \\
+            \specialrule{1pt}{0pt}{0pt}
+            Transformation in Event & $0$ & $0$ & $0$ & all \\
+            Transformation of Before & $> 0$ & $0$ & $0$ & $> 0$ \\
+            Transformation of After & $0$ & $0$ & $> 0$ & $> 0$ \\
+            \specialrule{1pt}{0pt}{0pt}
+            Fallback & any & any & any & any \\
+            \hline
+        \end{tabular}
+    }
+    \caption{The different cases in our classification.}
+    \label{table:impl-classification}
+\end{table}
+
+
+Once each event is classified, the initial inputs and final outputs are set based on the case of each event.
+The regular inputs and outputs, according to the above definition, are assumed to already exist and are not changed.
+In the fallback case, it is not possible to assign initial inputs or final outputs, so the roles remain unknown.
+The assignment is shown in \autoref{table:impl-initialfinal}, and in \autoref{table:impl-classification-visualization} the different cases are illustrated with the structure that triggers the case distinction and what the assumed underlying structure is.
+
+
+\begin{table}[h]
+    \centering
+    % \makebox[\textwidth][c] creates a box the width of the text,
+    % but allows the content inside to overflow into margins while staying centered.
+    \makebox[\textwidth][c]{
+        \begin{tabular}{|>{\columncolor{black!5}}l|l|l|l|} 
+            \hline
+            \rowcolor{black!5} 
+            \textbf{Event Classification} & \textbf{Initial inputs} & \textbf{Final Outputs} & \textbf{Unknown} \\ 
+            \hline
+            Fully Logistical & none & none & none \\
+            Logistical with Before & none & objects that are only before & none \\
+            Logistical with After & objects that are only after & none & none \\
+            \specialrule{1pt}{0pt}{0pt}
+            Transformation in Event & all objects & all objects & none \\
+            Transformation of Before & none & objects only in the event & none \\
+            Transformation of After & objects only in the event & none & none \\
+            \specialrule{1pt}{0pt}{0pt}
+            Fallback & none & none & all objects \\
+            \hline
+        \end{tabular}
+    }
+    \caption{The initial inputs and final outputs in the different cases.}
+    \label{table:impl-initialfinal}
+\end{table}
+
+
+
+    \begin{table}[h]
+        \centering
+\begin{tabular}{|>{\columncolor{black!5}}c|c|c|}
+\hline
+            \rowcolor{black!5} 
+            \textbf{Event Classification} & \textbf{Detected Structure} & \textbf{Assumed Structure} \\ 
+            \hline
+Fully Logistical & \includegraphics[width=3cm, valign=m]{figures/case1.pdf} & Identical to the detected structure \\
+    \hline
+Logistical with Before & \includegraphics[width=3cm, valign=m]{figures/case2.pdf} & \includegraphics[width=3cm, valign=m]{figures/case2_class.pdf} \\
+\hline
+Logistical with After & \includegraphics[width=3cm, valign=m]{figures/case3.pdf} & \includegraphics[width=3cm, valign=m]{figures/case3_class.pdf} \\
+            \specialrule{1pt}{0pt}{0pt}
+Transformation in Event & \includegraphics[width=3cm, valign=m]{figures/case4.pdf} & \includegraphics[width=3cm, valign=m]{figures/case4_class.pdf} \\
+\hline
+Transformation of Before & \includegraphics[width=3cm, valign=m]{figures/case5.pdf} & \includegraphics[width=3cm, valign=m]{figures/case5_class.pdf} \\
+\hline
+Transformation of After & \includegraphics[width=3cm, valign=m]{figures/case6.pdf} & \includegraphics[width=3cm, valign=m]{figures/case6_class.pdf} \\
+            \specialrule{1pt}{0pt}{0pt}
+Fallback & \includegraphics[width=3cm, valign=m]{figures/case7.pdf} & Identical to the detected structure \\
+\hline
+
+
+\end{tabular}
+    \caption{Illustrations of the structures that trigger each case, and what the assumed underlying structure is.}
+    \label{table:impl-classification-visualization}
+\end{table}
+
+
+Objects that still have an unknown role from the fallback case are rendered with a double-arrow dashed arc in the Petri net, or the user can provide their role as a hint to the algorithm.
+
+
+
+\label{chap:impl-using-mfa}
+Alternatively, the remaining objects with an unknown role can be resolved using MFA if they have a mass attribute.
+Accordingly, we assume that the mass-balance principle holds.
+Then, the objects with an unknown role are assigned initial input or final output roles in each possible combination, and the assignment with the smallest difference between the total input and output mass is chosen.
+This corresponds to the closest match of the total input and output mass.
+This procedure is equivalent to minimizing the process-wide waste $procwaste$ from \cref{chap:annotating-the-petri-net} over the possible assignments.
+
+
+
+
+\section{Ocelescope Plugin}
+
+
+
+In this section, we present how a user can use the method and implementation in Ocelescope~\autocite{ocelescope}.
+It is implemented in the \emph{Object Flow Miner} plugin.
+This plugin offers four methods that run the object flow miner, which differ in using weighted or variable arcs and having waste annotations or not.
+This menu is shown in \autoref{fig:impl-method-menu}.
+Each one gives an \emph{object flow net}.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/impl-method-menu.png}
+    \caption{The available methods in our Ocelescope plugin.}
+    \label{fig:impl-method-menu}
+\end{figure}
+
+
+As an example, choosing \enquote{Weighted arcs} leads to the configuration screen in \autoref{fig:impl-nonannotated}.
+It offers a range of parameters:
+\begin{enumerate}[label={\circled{\arabic*}}]
+    \item The OCEL2.0 event log.
+    
+    \item 
+    A list of object types that are filtered out prior to running the object flow miner.
+
+    \item 
+    The role function maps these object types to always be an initial input.
+    This allows the user to manually set the role functions.
+    For object types that are not given here or in the next field, the heuristic algorithm is applied to determine the role function.
+
+    \item 
+    The role function maps these object types to always be a final output.
+
+    \item 
+    If an attribute $mass$ exists, selecting this checkbox causes an MFA to be performed as described in ~\cref{chap:impl-using-mfa} to approximate mass balance as closely as possible.
+
+    \item 
+    The threshold $\alpha$, which filters configurations of the same activity, as described in \cref{chap:filtering}.
+
+    \item 
+    The threshold $\beta$, which filters the succeeding activities in a place and therefore reduces the number of arcs, also described in \cref{chap:filtering}.
+
+    \item 
+    Selecting this checkbox also displays the inputs and outputs of each place and transition as additional information in each node, which is done throughout the examples in our method.
+\end{enumerate}
+The Ocelescope application automatically populates each field with appropriate suggestions, such as exactly the object types that occur in the log.
+Clicking on \texttt{Submit} executes the algorithm, yielding the same OFN model that was also the result of our method in \cref{chap:creating-the-model}, see \autoref{fig:algorithm-petrinet-step}.
+Ocelescope shows a preview of the model, see \autoref{fig:impl-unannotated-result}, which can be made full-screen and downloaded.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/impl-unannotated.pdf}
+    \caption{The available parameters for the algorithm with weighted arcs and without annotations in Ocelescope.}
+    \label{fig:impl-nonannotated}
+\end{figure}
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\linewidth, height=0.5\textheight, keepaspectratio]{figures/impl-unannotated-result.png}
+    \caption{The output of Ocelescope for the parameters given in \autoref{fig:impl-nonannotated}.}
+    \label{fig:impl-unannotated-result}
+\end{figure}
+
+
+
+We also explain the parameters for the \enquote{Weighted arcs with annotations} method, shown in \autoref{fig:impl-annotated}.
+In addition to the previously described parameters, now the interface includes the options:
+\begin{enumerate}[start=9, label={\circled{\arabic*}}]
+    \item
+    These object types are counted in each place where they are initial input or final output.
+
+    \item
+    The mass of these object types is calculated for each place where they are initial input or final output.
+
+    \item
+    The attribute $mass$ is averaged and summed for each configuration of the activities listed here.
+
+    \item
+    The difference between the number of input and output objects is calculated for each configuration of the activities listed here.
+
+    \item
+    The difference between the summed masses of input and output objects is calculated for each configuration of the activities listed here.
+\end{enumerate}
+With the given configuration, this generates the model with waste annotations shown as an example in our method in~\autoref{fig:algorithm-waste-annotated}.
+We do not show the menus for the variable arc methods as they are completely identical.
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth, height=\textheight, keepaspectratio]{figures/impl-annotated.pdf}
+    \caption{The available parameters for the algorithm with weighted arcs and with annotations in Ocelescope.}
+    \label{fig:impl-annotated}
+\end{figure}
+
