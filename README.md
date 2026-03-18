@@ -1,7 +1,7 @@
 # Input Output Mining
 
 
-This repository contains the data for the thesis `Determining Material Waste in Object-Centric Event Logs using Input and Output Mining`.
+This repository contains the data for the thesis _Determining Material Waste in Object-Centric Event Logs using Input and Output Mining_.
 In particular, it contains example logs, and how the methods presented, the heuristic discovery of role functions and the object flow miner with or without waste annotations, are applied to them.
 
 
