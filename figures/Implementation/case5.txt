@@ -1,0 +1,48 @@
+digraph G {
+    rankdir=LR;
+    node [shape=circle];
+
+    // --- INPUT SIDE ---
+    subgraph cluster_inputs {
+        peripheries=0; // Hide subgraph border
+        
+        // These are the "external" source dots
+        dotsin3 [shape=none, label="", fontsize=24, fontcolor="orangered"];
+        dotsin4 [shape=none, label="", fontsize=24, fontcolor="orangered"];
+
+        // The actual Input nodes
+        In3 [shape="circle", style="filled", label="", color="orangered"];
+        In4 [label="", style="filled", color="orangered"];
+    }
+
+    // --- CENTER ---
+    Center [shape=rect, label="", style=none, fillcolor=black];
+    Neither [shape="circle", label="", style="filled", color="green3"];
+
+    Center -> Neither [style="dashed", dir="both", minlen="3", color="green3"];
+
+    // --- OUTPUT SIDE ---
+    subgraph cluster_outputs {
+        peripheries=0;
+
+        Invis[shape="none", label=""];
+
+        }
+
+    // --- VERTICAL RANKING (Columns) ---
+    { rank=same; dotsin3; dotsin4 }
+    { rank=same; In3; In4; }
+    { rank=same; Center; Neither }
+
+    // --- CONNECTIONS WITH WEIGHTS ---
+    // Weight=10 forces these edges to try and stay perfectly horizontal
+
+    dotsin3 -> In3 [style="dotted", color="orangered", weight=10];
+    dotsin4 -> In4 [style="dotted", color="orangered", weight=10];
+    Center -> Invis [style="invis"];
+
+    // Standard connections (default weight=1)
+    {In3 In4} -> Center [color="orangered"];
+
+    // Invisible spacing to keep the middle dots centered
+}

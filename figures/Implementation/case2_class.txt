@@ -1,0 +1,61 @@
+digraph G {
+    rankdir=LR;
+    node [shape=circle];
+
+    // --- INPUT SIDE ---
+    subgraph cluster_inputs {
+        peripheries=0; // Hide subgraph border
+        
+        // These are the "external" source dots
+        dotsin1 [shape=none, label="", fontsize=24, fontcolor=dodgerblue3];
+        dotsin2 [shape=none, label="", fontsize=24, fontcolor=dodgerblue3];
+        dotsin3 [shape=none, label="", fontsize=24, fontcolor="orangered"];
+
+        // The actual Input nodes
+        In1 [label="", style="filled", color=dodgerblue3, fontcolor=dodgerblue3];
+        In2 [label="", style="filled", color=dodgerblue3, fontcolor=dodgerblue3];
+        In3 [label="", style="filled", color="orangered"];
+    }
+
+    // --- CENTER ---
+    Center [shape=rect, label="", style=none, fillcolor=black];
+
+    // --- OUTPUT SIDE ---
+    subgraph cluster_outputs {
+        peripheries=0;
+        
+        Out1 [label="", style="filled", color=dodgerblue3, fontcolor=dodgerblue3];
+        Out2 [label="", style="filled", color=dodgerblue3, fontcolor=dodgerblue3];
+        Out3 [shape="doubleoctagon", style="filled", label="", color="orangered", fontcolor=dodgerblue3];
+
+        // External sink dots
+        dotsout1 [shape=none, label="", fontsize=24, fontcolor=dodgerblue3];
+        dotsout2 [shape=none, label="", fontsize=24, fontcolor=dodgerblue3];
+    }
+
+    // --- VERTICAL RANKING (Columns) ---
+    { rank=same; dotsin1; dotsin2; dotsin3 }
+    { rank=same; In1; In2; In3 }
+    { rank=same; Out1; Out2; Out3 }
+    { rank=same; dotsout1; dotsout2 }
+    { rank=same; Center }
+
+    // --- CONNECTIONS WITH WEIGHTS ---
+    // Weight=10 forces these edges to try and stay perfectly horizontal
+    dotsin1 -> In1 [style="dotted", color=dodgerblue3, weight=10];
+    In1 -> Center [color=dodgerblue3, weight=10];
+    Center -> Out1 [color=dodgerblue3, weight=10];
+    Out1 -> dotsout1 [style="dotted", color=dodgerblue3, weight=10];
+
+    dotsin2 -> In2 [style="dotted", color=dodgerblue3, weight=10];
+    dotsin3 -> In3 [style="dotted", color="orangered", weight=10];
+    In2 -> Center [color=dodgerblue3, weight=10];
+    Center -> Out2 [color=dodgerblue3, weight=10];
+    Out2 -> dotsout2 [style="dotted", color=dodgerblue3, weight=10];
+    Center -> Out3 [color="orangered", weight=10];
+
+    // Standard connections (default weight=1)
+    {In3} -> Center [color="orangered"];
+
+    // Invisible spacing to keep the middle dots centered
+}

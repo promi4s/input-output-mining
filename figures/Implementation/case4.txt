@@ -1,0 +1,34 @@
+digraph G {
+    rankdir=LR;
+    node [shape=circle];
+
+    // --- INPUT SIDE ---
+    subgraph cluster_inputs {
+        peripheries=0; // Hide subgraph border
+        Invis0 [style="invis"];
+    }
+
+    // --- CENTER ---
+    Center [shape=rect, label="", style=none, fillcolor=black];
+    Neither [shape="circle", style="filled", label="", color="green3"];
+
+    Center -> Neither [style="dashed", dir="both", minlen="3", color="green3"];
+
+    // --- OUTPUT SIDE ---
+    subgraph cluster_outputs {
+        peripheries=0;
+        
+        Invis1[style="invis"];
+    }
+
+    // --- VERTICAL RANKING (Columns) ---
+    { rank=same; Center; Neither }
+    Invis0 -> Center [style="invis"];
+    Center -> Invis1 [style="invis"];
+
+    // --- CONNECTIONS WITH WEIGHTS ---
+    // Weight=10 forces these edges to try and stay perfectly horizontal
+
+
+    // Invisible spacing to keep the middle dots centered
+}

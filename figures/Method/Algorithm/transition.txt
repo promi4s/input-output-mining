@@ -1,0 +1,18 @@
+Degas
+s = \big( \underbrace{Degas}_\textrm{Activity}, \underbrace{\left[Mold^1\right]}_\textrm{In}, \underbrace{\left[Mold^1\right]}_\textrm{Out}, \underbrace{[\,]}_\textrm{Init}, \underbrace{[\,]}_\textrm{Final} \big)
+\\
+c_s = \big( s, \underbrace{Mold \mapsto \left[ Inject^1 \right] }_{ Mold \text{ used in } Inject \text{ previously}}, \underbrace{Mold \mapsto \left[ Trim^1 \right] }_{ Mold \text{ used next in } Trim \text{ next} } \big)
+
+
+
+Pack
+s = \big( \underbrace{Pack}_\textrm{Activity}, \underbrace{ \left[ Product^1, Mold^1 \right] }_\textrm{In}, \underbrace{[\,]}_\textrm{Out}, \underbrace{[\,]}_\textrm{Init}, \underbrace{ \left[ Product^1 \right] }_\textrm{Final} \big)
+\\
+c_s = \big(s, \underbrace{Product \mapsto \left[Pack^1 \right] }_{ Product \text{ from } Pack }; \underbrace{Mold \mapsto \left[Trim^1 \right] }_{ Mold \text{ from } Trim }, \underbrace{ Product \mapsto [ \, ] }_{\text{No  succeeding activities}} \big)
+
+
+
+Created
+\big( \underbrace{Resin}_\text{Type}, \underbrace{ [\,] }_\text{No preceding activities}, \underbrace{ \left[ Inject^2 \right] }_{\text{Only } Inject \text{ succeeds this place candidate}} \big)
+\\
+\big( \underbrace{ Mold}_\text{Type}, \underbrace{ \left[ Inject^1, Degas^1, Trim^4 \right] }_{ \text{From } Inject \text{, } Degas \text{ or four from } Trim }, \underbrace{ \left[ Trim^4 \right] }_{ \text{Four to } Trim } \big)

@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="300pt"
+   height="193pt"
+   viewBox="0 0 300 193"
+   version="1.1"
+   id="svg30"
+   sodipodi:docname="case7.svg"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs30" />
+  <sodipodi:namedview
+     id="namedview30"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="pt"
+     inkscape:zoom="3.0338001"
+     inkscape:cx="141.57162"
+     inkscape:cy="175.19282"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg30" />
+  <g
+     id="graph0"
+     class="graph"
+     transform="translate(-55.855519,186.5)">
+    <title
+       id="title1">G</title>
+    <g
+       id="clust1"
+       class="cluster">
+      <title
+         id="title2">cluster_inputs</title>
+    </g>
+    <g
+       id="clust2"
+       class="cluster">
+      <title
+         id="title3">cluster_outputs</title>
+    </g>
+    <!-- dotsin1 -->
+    <g
+       id="node1"
+       class="node">
+      <title
+         id="title4">dotsin1</title>
+    </g>
+    <!-- In1 -->
+    <g
+       id="node2"
+       class="node">
+      <title
+         id="title5">In1</title>
+      <circle
+         fill="#1874cd"
+         stroke="#1874cd"
+         cx="124"
+         cy="-162"
+         id="ellipse5"
+         r="18" />
+    </g>
+    <!-- dotsin1&#45;&gt;In1 -->
+    <g
+       id="edge7"
+       class="edge">
+      <title
+         id="title6">dotsin1-&gt;In1</title>
+      <path
+         fill="none"
+         stroke="#1874cd"
+         stroke-dasharray="1, 5"
+         d="m 70.4229,-162 c 8.0418,0 16.8543,0 24.968,0"
+         id="path6" />
+      <polygon
+         fill="#1874cd"
+         stroke="#1874cd"
+         points="95.5312,-165.5001 105.5312,-162 95.5311,-158.5001 "
+         id="polygon6" />
+    </g>
+    <!-- Center -->
+    <g
+       id="node7"
+       class="node">
+      <title
+         id="title7">Center</title>
+      <polygon
+         fill="none"
+         stroke="#000000"
+         points="178,-90 232,-90 232,-126 178,-126 "
+         id="polygon7" />
+    </g>
+    <!-- In1&#45;&gt;Center -->
+    <g
+       id="edge11"
+       class="edge">
+      <title
+         id="title8">In1-&gt;Center</title>
+      <path
+         fill="none"
+         stroke="#1874cd"
+         d="m 139.2355,-151.843 c 8.5339,5.6893 19.5597,13.0398 30.1359,20.0906"
+         id="path8" />
+      <polygon
+         fill="#1874cd"
+         stroke="#1874cd"
+         points="171.3215,-134.6588 177.7006,-126.1996 167.4386,-128.8345 "
+         id="polygon8" />
+    </g>
+    <!-- dotsin3 -->
+    <g
+       id="node3"
+       class="node">
+      <title
+         id="title9">dotsin3</title>
+    </g>
+    <!-- In3 -->
+    <g
+       id="node5"
+       class="node">
+      <title
+         id="title10">In3</title>
+      <circle
+         fill="#ff4500"
+         stroke="#ff4500"
+         cx="124"
+         cy="-108"
+         id="ellipse10"
+         r="18" />
+    </g>
+    <!-- dotsin3&#45;&gt;In3 -->
+    <g
+       id="edge9"
+       class="edge">
+      <title
+         id="title11">dotsin3-&gt;In3</title>
+      <path
+         fill="none"
+         stroke="#ff4500"
+         stroke-dasharray="1, 5"
+         d="m 70.4229,-108 c 8.0418,0 16.8543,0 24.968,0"
+         id="path11" />
+      <polygon
+         fill="#ff4500"
+         stroke="#ff4500"
+         points="95.5312,-111.5001 105.5312,-108 95.5311,-104.5001 "
+         id="polygon11" />
+    </g>
+    <!-- dotsin4 -->
+    <g
+       id="node4"
+       class="node">
+      <title
+         id="title12">dotsin4</title>
+    </g>
+    <!-- In4 -->
+    <g
+       id="node6"
+       class="node">
+      <title
+         id="title13">In4</title>
+      <circle
+         fill="#ff4500"
+         stroke="#ff4500"
+         cx="124"
+         cy="-54"
+         id="ellipse13"
+         r="18" />
+    </g>
+    <!-- dotsin4&#45;&gt;In4 -->
+    <g
+       id="edge10"
+       class="edge">
+      <title
+         id="title14">dotsin4-&gt;In4</title>
+      <path
+         fill="none"
+         stroke="#ff4500"
+         stroke-dasharray="1, 5"
+         d="m 70.4229,-54 c 8.0418,0 16.8543,0 24.968,0"
+         id="path14" />
+      <polygon
+         fill="#ff4500"
+         stroke="#ff4500"
+         points="95.5312,-57.5001 105.5312,-54 95.5311,-50.5001 "
+         id="polygon14" />
+    </g>
+    <!-- In3&#45;&gt;Center -->
+    <g
+       id="edge12"
+       class="edge">
+      <title
+         id="title15">In3-&gt;Center</title>
+      <path
+         fill="none"
+         stroke="#ff4500"
+         d="m 142.3802,-108 c 7.5149,0 16.4955,0 25.277,0"
+         id="path15" />
+      <polygon
+         fill="#ff4500"
+         stroke="#ff4500"
+         points="167.7747,-111.5001 177.7746,-108 167.7746,-104.5001 "
+         id="polygon15" />
+    </g>
+    <!-- In4&#45;&gt;Center -->
+    <g
+       id="edge13"
+       class="edge">
+      <title
+         id="title16">In4-&gt;Center</title>
+      <path
+         fill="none"
+         stroke="#ff4500"
+         d="m 139.2355,-64.157 c 8.5339,-5.6893 19.5597,-13.0398 30.1359,-20.0906"
+         id="path16" />
+      <polygon
+         fill="#ff4500"
+         stroke="#ff4500"
+         points="167.4386,-87.1655 177.7006,-89.8004 171.3215,-81.3412 "
+         id="polygon16" />
+    </g>
+    <!-- Neither -->
+    <g
+       id="node8"
+       class="node">
+      <title
+         id="title17">Neither</title>
+      <circle
+         fill="#00cd00"
+         stroke="#00cd00"
+         cx="205"
+         cy="-18"
+         id="ellipse17"
+         r="18" />
+    </g>
+    <!-- Center&#45;&gt;Neither -->
+    <g
+       id="edge1"
+       class="edge">
+      <title
+         id="title18">Center-&gt;Neither</title>
+      <path
+         fill="none"
+         stroke="#00cd00"
+         stroke-dasharray="5, 2"
+         d="m 205,-79.6005 c 0,11.0955 0,22.1909 0,33.2863"
+         id="path18" />
+      <polygon
+         fill="#00cd00"
+         stroke="#00cd00"
+         points="201.5001,-79.7901 205,-89.7902 208.5001,-79.7902 "
+         id="polygon18" />
+      <polygon
+         fill="#00cd00"
+         stroke="#00cd00"
+         points="208.5001,-46.2812 205,-36.2813 201.5001,-46.2813 "
+         id="polygon19" />
+    </g>
+    <!-- Out1 -->
+    <g
+       id="node10"
+       class="node">
+      <title
+         id="title19">Out1</title>
+      <circle
+         fill="#1874cd"
+         stroke="#1874cd"
+         cx="286"
+         cy="-162"
+         id="ellipse19"
+         r="18" />
+    </g>
+    <!-- Center&#45;&gt;Out1 -->
+    <g
+       id="edge6"
+       class="edge">
+      <title
+         id="title20">Center-&gt;Out1</title>
+      <path
+         fill="none"
+         stroke="#1874cd"
+         d="m 232.4229,-126.2819 c 9.7386,-6.4924 20.6072,-13.7381 29.9966,-19.9977"
+         id="path20" />
+      <polygon
+         fill="#1874cd"
+         stroke="#1874cd"
+         points="260.6213,-149.2873 270.8833,-151.9222 264.5042,-143.4629 "
+         id="polygon20" />
+    </g>
+    <!-- Out3 -->
+    <g
+       id="node11"
+       class="node">
+      <title
+         id="title21">Out3</title>
+      <circle
+         fill="#a020f0"
+         stroke="#a020f0"
+         cx="286"
+         cy="-108"
+         id="ellipse21"
+         r="18" />
+    </g>
+    <!-- Center&#45;&gt;Out3 -->
+    <g
+       id="edge4"
+       class="edge">
+      <title
+         id="title22">Center-&gt;Out3</title>
+      <path
+         fill="none"
+         stroke="#a020f0"
+         d="m 232.4229,-108 c 8.0418,0 16.8543,0 24.968,0"
+         id="path22" />
+      <polygon
+         fill="#a020f0"
+         stroke="#a020f0"
+         points="257.5312,-111.5001 267.5312,-108 257.5311,-104.5001 "
+         id="polygon22" />
+    </g>
+    <!-- Out4 -->
+    <g
+       id="node12"
+       class="node">
+      <title
+         id="title23">Out4</title>
+      <circle
+         fill="#a020f0"
+         stroke="#a020f0"
+         cx="286"
+         cy="-54"
+         id="ellipse23"
+         r="18" />
+    </g>
+    <!-- Center&#45;&gt;Out4 -->
+    <g
+       id="edge5"
+       class="edge">
+      <title
+         id="title24">Center-&gt;Out4</title>
+      <path
+         fill="none"
+         stroke="#a020f0"
+         d="m 232.4229,-89.7181 c 9.7386,6.4924 20.6072,13.7381 29.9966,19.9977"
+         id="path24" />
+      <polygon
+         fill="#a020f0"
+         stroke="#a020f0"
+         points="264.5042,-72.5371 270.8833,-64.0778 260.6213,-66.7127 "
+         id="polygon24" />
+    </g>
+    <!-- dotsout1 -->
+    <g
+       id="node9"
+       class="node">
+      <title
+         id="title25">dotsout1</title>
+    </g>
+    <!-- Out1&#45;&gt;dotsout1 -->
+    <g
+       id="edge8"
+       class="edge">
+      <title
+         id="title26">Out1-&gt;dotsout1</title>
+      <path
+         fill="none"
+         stroke="#1874cd"
+         stroke-dasharray="1, 5"
+         d="m 304.3802,-162 c 7.5149,0 16.4955,0 25.277,0"
+         id="path26" />
+      <polygon
+         fill="#1874cd"
+         stroke="#1874cd"
+         points="329.7747,-165.5001 339.7746,-162 329.7746,-158.5001 "
+         id="polygon26" />
+    </g>
+    <!-- dotsout3 -->
+    <g
+       id="node13"
+       class="node">
+      <title
+         id="title27">dotsout3</title>
+    </g>
+    <!-- Out3&#45;&gt;dotsout3 -->
+    <g
+       id="edge2"
+       class="edge">
+      <title
+         id="title28">Out3-&gt;dotsout3</title>
+      <path
+         fill="none"
+         stroke="#a020f0"
+         stroke-dasharray="1, 5"
+         d="m 304.3802,-108 c 7.5149,0 16.4955,0 25.277,0"
+         id="path28" />
+      <polygon
+         fill="#a020f0"
+         stroke="#a020f0"
+         points="329.7747,-111.5001 339.7746,-108 329.7746,-104.5001 "
+         id="polygon28" />
+    </g>
+    <!-- dotsout4 -->
+    <g
+       id="node14"
+       class="node">
+      <title
+         id="title29">dotsout4</title>
+    </g>
+    <!-- Out4&#45;&gt;dotsout4 -->
+    <g
+       id="edge3"
+       class="edge">
+      <title
+         id="title30">Out4-&gt;dotsout4</title>
+      <path
+         fill="none"
+         stroke="#a020f0"
+         stroke-dasharray="1, 5"
+         d="m 304.3802,-54 c 7.5149,0 16.4955,0 25.277,0"
+         id="path30" />
+      <polygon
+         fill="#a020f0"
+         stroke="#a020f0"
+         points="329.7747,-57.5001 339.7746,-54 329.7746,-50.5001 "
+         id="polygon30" />
+    </g>
+  </g>
+</svg>
