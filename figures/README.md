@@ -8,7 +8,7 @@ For some figures, I used Inkscape to add further explanations or combined two ou
 In `Implementation/`, I used [edotor.net](https://edotor.net/) to generate the SVG from the graphviz code given in the text files.
 
 
-The figures in `Runtime/` were generated using `data/evaluation/runtime.py` on the main branch.
+The figures in `Runtime/` were generated using `data/evaluation/plot_runtimes.py` on the main branch.
 
 
 The figures in `Plugin/` are modified screenhots from the plugin.
